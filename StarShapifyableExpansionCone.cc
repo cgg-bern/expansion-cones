@@ -4,7 +4,7 @@
 
 #define ENABLE_SS_DEBUG 0
 #if ENABLE_SS_DEBUG
-#define SS_DEBUG(msg) std::cout<<msg<<std::endl;
+#define SS_DEBUG(msg) SS_DEBUG(msg<<std::endl);
 #define IF_SS_DEBUG(statement) statement;
 #else
 #define SS_DEBUG(msg)
@@ -102,35 +102,35 @@ void StarShapifyableExpansionCone::set_vertex(const VertexHandle& vh,
 STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_faster_but_unsafe_RS,
                                                                      bool reduce_precision){
 
-    std::cout<<" =============================================================="<<std::endl;
-    std::cout<<" =============================================================="<<std::endl;
-    std::cout<<" =============== STAR-SHAPIFYING CONE "<<(*this)<<"..."<<std::endl;
+    SS_DEBUG(" =============================================================="<<std::endl);
+    SS_DEBUG(" =============================================================="<<std::endl);
+    SS_DEBUG(" =============== STAR-SHAPIFYING CONE "<<(*this)<<"..."<<std::endl);
 
 #if !ENABLE_PRECISION_REDUCTION
-    std::cout<<" WARNING - disabled precision reduction"<<std::endl;
+    SS_DEBUG(" WARNING - disabled precision reduction"<<std::endl);
     reduce_precision = false;
 #endif
 
 
     if(!full_reverse_shelling_sequence_.empty()){
-        std::cout<<" ERROR - reverse shelling sequence is not empty at 'star_shapify' start"<<std::endl;
+        SS_DEBUG(" ERROR - reverse shelling sequence is not empty at 'star_shapify' start"<<std::endl);
         return SS_ERROR;
     }
 
 
     if(!split_list_.empty()){
-        std::cout<<" ERROR - split list is not empty at 'star_shapify' start"<<std::endl;
+        SS_DEBUG(" ERROR - split list is not empty at 'star_shapify' start"<<std::endl);
         return SS_ERROR;
     }
 
 
     if(!collapse_list_.empty()){
-        std::cout<<" ERROR - collapse list is not empty at 'star_shapify' start"<<std::endl;
+        SS_DEBUG(" ERROR - collapse list is not empty at 'star_shapify' start"<<std::endl);
         return SS_ERROR;
     }
 
     /*if(use_faster_but_unsafe_RS){
-        std::cout<<" ---------- original cone details: "; print_details();
+        SS_DEBUG(" ---------- original cone details: "; print_details();
     }*/
 
 
@@ -145,14 +145,14 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     //tets incident to multiple tip vertices are bound to be degenerate
     if(/*!star_shapifying_cluster &&
             */ExactBadTetFinder::meshContainsDegenerateTets(*this, vertex_position_prop_)){
-        std::cout<<" =================================================="<<std::endl;
-        std::cout<<" ERROR - cone initially contains degenerate tets: "<<std::endl;
+        SS_DEBUG(" =================================================="<<std::endl);
+        SS_DEBUG(" ERROR - cone initially contains degenerate tets: "<<std::endl);
         auto bad_tets = ExactBadTetFinder::findBadTets(*this, vertex_position_prop_);
         for(auto t: bad_tets.first){
-            std::cout<<" - "<<t<<" -> "<<cone_to_mesh_handle(t)<<": "<<get_cell_vertices(t)<<std::endl;
+            SS_DEBUG(" - "<<t<<" -> "<<cone_to_mesh_handle(t)<<": "<<get_cell_vertices(t)<<std::endl);
         }
         print_details();
-        std::cout<<" =================================================="<<std::endl;
+        SS_DEBUG(" =================================================="<<std::endl);
         return SS_ERROR;
     }
 #endif
@@ -180,7 +180,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
 
     SS_DEBUG(" - witness vertex: "<<witness_vertex_<<" with valence = "<<valence(witness_vertex_));
     if(witness_vertex_.idx() == -1){
-        std::cout<<" ERROR - couldn't find the witness vertex"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find the witness vertex"<<std::endl);
         return SS_ERROR;
     }
 
@@ -189,7 +189,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     //2. split the base to remove any tri-tet
     int base_split_result = split_base_non_link_edges_not_connected_to_witness();
     if(base_split_result){
-        std::cout<<" ERROR - couldn't split base non-link edges"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't split base non-link edges"<<std::endl);
         return SS_ERROR;
     }
 
@@ -210,7 +210,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     //4. unlock the 2-ring neighborhood vertices connected to >1 1-ring vertices
     /*base_split_result = split_base_1_2_ring_edges();
     if(base_split_result){
-        std::cout<<" ERROR - couldn't unlock the 2-ring vertices"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't unlock the 2-ring vertices"<<std::endl);
         return SS_ERROR;
     }*/
 
@@ -220,7 +220,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     gather_vertices_outside_of_1_ring_neighborhood_of_witness_vertex(vertices_to_collapse);
     SS_DEBUG(" - vertices to remove ("<<vertices_to_collapse.size()<<"): "<<vertices_to_collapse);
     if(!vertices_to_collapse.size()){
-        std::cout<<" ERROR - couldn't find any vertices to collapse"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find any vertices to collapse"<<std::endl);
         return SS_NO_VERTICES_TO_COLLAPSE;
     }
 
@@ -239,7 +239,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
 
 
     if(reverse_shelling_result){
-        std::cout<<" ERROR - couldn't run the reverse shelling sequence"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't run the reverse shelling sequence"<<std::endl);
         SS_DEBUG(" - original cone details:");
         //IF_SS_DEBUG(original_cone.print_details());
         return SS_ERROR;
@@ -247,7 +247,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
 
 
 
-    //std::cout<<" WARNING - MANUAL STOP HERE"<<std::endl;
+    //SS_DEBUG(" WARNING - MANUAL STOP HERE"<<std::endl);
     //return SS_GENERAL_FAILURE;
 
 
@@ -261,9 +261,9 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
         for(auto out_he: outgoing_halfedges(tip_v)){
             base_vertex_to_spoke_edge_prop_[to_vertex_handle(out_he)] = out_he;
             original_base_vertex_prop_[to_vertex_handle(out_he)] = to_vertex_handle(out_he);
-            /*std::cout<<" - set edge "<<cone_to_mesh_handle(from_vertex_handle(out_he))<<
+            /*SS_DEBUG(" - set edge "<<cone_to_mesh_handle(from_vertex_handle(out_he))<<
                        "-"<<cone_to_mesh_handle(to_vertex_handle(out_he))<<
-                       " as spoke of base vertex "<<expansion_cone.cone_to_mesh_handle(to_vertex_handle(out_he))<<std::endl;
+                       " as spoke of base vertex "<<expansion_cone.cone_to_mesh_handle(to_vertex_handle(out_he))<<std::endl);
             */
         }
     }
@@ -273,7 +273,7 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     gather_vertices_outside_of_1_ring_neighborhood_of_witness_vertex(vertices_to_collapse);
     SS_DEBUG(" - vertices to collapse ("<<vertices_to_collapse.size()<<"): "<<vertices_to_collapse);
     if(!vertices_to_collapse.size()){
-        std::cout<<" ERROR - couldn't find any vertices to collapse after running reverse-shelling sequence"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find any vertices to collapse after running reverse-shelling sequence"<<std::endl);
         return SS_NO_VERTICES_TO_COLLAPSE;
     }
 
@@ -289,10 +289,10 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     auto geo_exp_result = updated_cone.is_geo_expandable(pos);
 
     if(geo_exp_result){
-        std::cout<<" ERROR - temp check for geo-exp failed before the collapse sequence"<<std::endl;
-        std::cout<<" updated cone: "<<std::endl;
+        SS_DEBUG(" ERROR - temp check for geo-exp failed before the collapse sequence"<<std::endl);
+        SS_DEBUG(" updated cone: "<<std::endl);
         updated_cone.print_details();
-        std::cout<<" cone: "<<std::endl;
+        SS_DEBUG(" cone: "<<std::endl);
         print_details();
         return SS_ERROR;
     }
@@ -303,38 +303,38 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     //9. collapse all necessary vertices in reverse-shelling order
     auto collapse_result = run_collapse_sequence(vertices_to_collapse);
     if(collapse_result){
-        std::cout<<" - failed to run the collapse sequence"<<std::endl;
+        SS_DEBUG(" - failed to run the collapse sequence"<<std::endl);
         return SS_ERROR;
     }
 
     //10. and run the contraction sequence to have all positive-volume tets
     auto contraction_result = run_contraction_sequence(reduce_precision);
     if(contraction_result){
-        std::cout<<" - failed to run the contraction sequence"<<std::endl;
+        SS_DEBUG(" - failed to run the contraction sequence"<<std::endl);
         return SS_ERROR;
     }
 
-    std::cout<<" .... DONE!"<<std::endl;
+    SS_DEBUG(" .... DONE!"<<std::endl);
 //#if ENABLE_BAD_TETS_CHECKS_OUT_OF_LOOPS
     auto bad_tets = ExactBadTetFinder::findBadTets(*this, vertex_position_prop_);
     if(bad_tets.first.size()){
-        std::cout<<" ERROR - cone contains degenerate tets after contraction:"<<std::endl;
+        SS_DEBUG(" ERROR - cone contains degenerate tets after contraction:"<<std::endl);
         for(auto bad_tet: bad_tets.first){
-            std::cout<<" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl;
+            SS_DEBUG(" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl);
         }
         return SS_ERROR;
     }
     if(bad_tets.second.size()){
-        std::cout<<" ERROR - cone contains flipped tets after contraction:"<<std::endl;
+        SS_DEBUG(" ERROR - cone contains flipped tets after contraction:"<<std::endl);
         for(auto bad_tet: bad_tets.second){
-            std::cout<<" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl;
+            SS_DEBUG(" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl);
         }
         return SS_ERROR;
     }
 //#endif
 
     if(found_deg_tets_){
-        std::cout<<" ERROR - deg tets created during contraction but now they're gone..."<<std::endl;
+        SS_DEBUG(" ERROR - deg tets created during contraction but now they're gone..."<<std::endl);
         return SS_ERROR;
     }
 
@@ -343,31 +343,31 @@ STAR_SHAPIFICATION_RESULT StarShapifyableExpansionCone::star_shapify(bool use_fa
     count_base_edges(original_edges_count, new_edges_count);
 
 
-    std::cout<<" DONE WITH STAR-SHAPIFICATION"<<std::endl;
-    std::cout<<" ---------------------------------------"<<std::endl;
-    std::cout<<" initial vertex count = "<<initial_n_vertices<<std::endl;
-    std::cout<<"   final vertex count = "<<n_logical_vertices()<<std::endl;
-    std::cout<<"         growth ratio = "<<((double)n_logical_vertices() / (double)initial_n_vertices)<<std::endl;
-    std::cout<<" ---------------------------------------"<<std::endl;
-    std::cout<<" original edges (pieces) count = "<<original_edges_count<<std::endl;
-    std::cout<<"      new edges (pieces) count = "<<new_edges_count<<std::endl;
-    std::cout<<"            edges growth ratio = "<<((double)new_edges_count / (double)original_edges_count)<<std::endl;
-    std::cout<<" ---------------------------------------"<<std::endl;
-    std::cout<<"   max position byte precision = "<<new_position_max_precision_<<std::endl;
-    std::cout<<"      new position record size = "<<new_position_precision_record_.size()<<std::endl;
-    std::cout<<"             total saved bytes = "<<saved_position_bytes_<<std::endl;
-    std::cout<<"  10-points approximation of precision evolution: ";
+    SS_DEBUG(" DONE WITH STAR-SHAPIFICATION"<<std::endl);
+    SS_DEBUG(" ---------------------------------------"<<std::endl);
+    SS_DEBUG(" initial vertex count = "<<initial_n_vertices<<std::endl);
+    SS_DEBUG("   final vertex count = "<<n_logical_vertices()<<std::endl);
+    SS_DEBUG("         growth ratio = "<<((double)n_logical_vertices() / (double)initial_n_vertices)<<std::endl);
+    SS_DEBUG(" ---------------------------------------"<<std::endl);
+    SS_DEBUG(" original edges (pieces) count = "<<original_edges_count<<std::endl);
+    SS_DEBUG("      new edges (pieces) count = "<<new_edges_count<<std::endl);
+    SS_DEBUG("            edges growth ratio = "<<((double)new_edges_count / (double)original_edges_count)<<std::endl);
+    SS_DEBUG(" ---------------------------------------"<<std::endl);
+    SS_DEBUG("   max position byte precision = "<<new_position_max_precision_<<std::endl);
+    SS_DEBUG("      new position record size = "<<new_position_precision_record_.size()<<std::endl);
+    SS_DEBUG("             total saved bytes = "<<saved_position_bytes_<<std::endl);
+    SS_DEBUG("  10-points approximation of precision evolution: ");
     double sum(0);
     int mod = std::max((int)new_position_precision_record_.size() / 10, 1);
     for(int i(0); i<(int)new_position_precision_record_.size(); i++){
         sum += new_position_precision_record_[i];
         if(i && !(i % mod)){
-            std::cout<<" "<<(sum/mod);
+            SS_DEBUG(" "<<(sum/mod));
             sum = 0;
         }
     }
-    std::cout<<std::endl;
-    std::cout<<" =============================================================="<<std::endl;
+    SS_DEBUG(std::endl);
+    SS_DEBUG(" =============================================================="<<std::endl);
 
     return SS_SUCCESS;
 }
@@ -444,20 +444,20 @@ int StarShapifyableExpansionCone::find_shortest_dual_path_to_boundary(const Edge
 
     //setting distance of all remaining tets of the trimmed copy to 0 so we don't go through those
     for(auto c: trimmed_copy_.cells()){
-        //std::cout<<" - removed tet "<<get_cell_vertices(c)<<" from path candidates"<<std::endl;
+        //SS_DEBUG(" - removed tet "<<get_cell_vertices(c)<<" from path candidates"<<std::endl);
         distance_prop[c] = 0;
     }
 
     //pick whichever incident cell is not part of the trimmed copy
     CellHandle start_tet(-1);
     for(auto ec_it = ec_iter(start); ec_it.valid(); ec_it++){
-        std::cout<<" - checking incident tet "<<get_cell_vertices(*ec_it)<<std::endl;
+        SS_DEBUG(" - checking incident tet "<<get_cell_vertices(*ec_it)<<std::endl);
         if(distance_prop[*ec_it]){
             start_tet = *ec_it;
         }
     }
     if(!start_tet.is_valid()){
-        std::cout<<" ERROR - couldn't find a starting tet for the shortest dual path-finding algorithm"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find a starting tet for the shortest dual path-finding algorithm"<<std::endl);
         return -1;
     }
 
@@ -501,7 +501,7 @@ int StarShapifyableExpansionCone::find_shortest_dual_path_to_boundary(const Edge
     }
 
     if(closest_boundary_tet.idx() == -1){
-        std::cout<<" ERROR - couldn't find closest boundary tet"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find closest boundary tet"<<std::endl);
         return -1;
     }
 
@@ -532,8 +532,8 @@ int StarShapifyableExpansionCone::find_shortest_dual_path_to_boundary(const Edge
 
         auto common_edge = common_base_edge(current_tet, previous_tet);
         if(common_edge.idx() == -1){
-            std::cout<<" ERROR - couldn't find common edge between tets "<<get_cell_vertices(current_tet)<<
-                       " and "<<get_cell_vertices(previous_tet)<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find common edge between tets "<<get_cell_vertices(current_tet)<<
+                       " and "<<get_cell_vertices(previous_tet)<<std::endl);
             return -1;
         }
 
@@ -577,8 +577,8 @@ EdgeHandle StarShapifyableExpansionCone::common_base_edge(const CellHandle& c1,
         }
     }
     if(common_face.idx() == -1){
-        std::cout<<" ERROR - couldn't find common face between tets "<<get_cell_vertices(c1)<<
-                   " and "<<get_cell_vertices(c2)<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find common face between tets "<<get_cell_vertices(c1)<<
+                   " and "<<get_cell_vertices(c2)<<std::endl);
         return common_edge;
     }
 
@@ -692,17 +692,17 @@ int StarShapifyableExpansionCone::split_base_1_2_ring_edges(){
             i++;
         }
         if(i == (int)n_edges()){
-            std::cout<<" ERROR - this shouldn't happen"<<std::endl;
+            SS_DEBUG(" ERROR - this shouldn't happen"<<std::endl);
             return -1;
         }
         SS_DEBUG(" -- using starting edge "<<edge(start_edge));
 
         if(start_edge.idx() == -1){
-            std::cout<<" ERROR - no sub-edge for 1-2-ring edge "<<edge(one_two_ring_e)<<std::endl;
+            SS_DEBUG(" ERROR - no sub-edge for 1-2-ring edge "<<edge(one_two_ring_e)<<std::endl);
             return -1;
         }
         if(is_deleted(start_edge)){
-            std::cout<<" ERROR - sub-edge "<<edge(start_edge)<<" to original edge "<<edge(one_two_ring_e)<<" is deleted"<<std::endl;
+            SS_DEBUG(" ERROR - sub-edge "<<edge(start_edge)<<" to original edge "<<edge(one_two_ring_e)<<" is deleted"<<std::endl);
             return -1;
         }
 
@@ -711,7 +711,7 @@ int StarShapifyableExpansionCone::split_base_1_2_ring_edges(){
                                                              path_to_split);
 
         if(sp_result){
-            std::cout<<" ERROR - couldn't find path to split starting from edge "<<edge(start_edge)<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find path to split starting from edge "<<edge(start_edge)<<std::endl);
             return SS_ERROR;
         }
 
@@ -726,9 +726,9 @@ int StarShapifyableExpansionCone::split_base_1_2_ring_edges(){
             if(edge_to_sub_edge_prop[to_split].idx() != -1){
                 SS_DEBUG(" --> edge "<<edge(to_split)<<" was split, replacing its sub-edge");
                 //NOTE. using random sub-edge for now
-                auto sub_edge = edge_handle(halfedge(mid_vertex, edge(to_split).from_vertex()));
+                auto sub_edge = edge_handle(find_halfedge(mid_vertex, edge(to_split).from_vertex()));
                 if(sub_edge.idx() == -1){
-                    std::cout<<" ERROR - couldn't find sub-edge "<<mid_vertex<<"-"<<edge(to_split).from_vertex()<<" to edge "<<edge(to_split)<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find sub-edge "<<mid_vertex<<"-"<<edge(to_split).from_vertex()<<" to edge "<<edge(to_split)<<std::endl);
                     return -1;
                 }
                 SS_DEBUG(" --> found sub-edge "<<edge(sub_edge));
@@ -770,7 +770,7 @@ int StarShapifyableExpansionCone::split_base_non_extended_link_edges_not_connect
     int i(0);
     int max_iteration_count(n_edges() -(int)valence(*cone_tip_vertices_.begin()));
 
-    std::cout<<" max iteration count: "<<max_iteration_count<<std::endl;
+    SS_DEBUG(" max iteration count: "<<max_iteration_count<<std::endl);
     bool found_edge_to_split(true);
     while(found_edge_to_split && i<max_iteration_count){
         found_edge_to_split = false;
@@ -796,7 +796,7 @@ int StarShapifyableExpansionCone::split_base_non_extended_link_edges_not_connect
                             }
                         }
                         if(one_ring_neighbors.size() != 2){
-                            std::cout<<" ERROR - 1-ring neighbors to 2-ring vertex "<<two_ring_v<<" are "<<one_ring_neighbors<<" but prop says there should only be 2"<<std::endl;
+                            SS_DEBUG(" ERROR - 1-ring neighbors to 2-ring vertex "<<two_ring_v<<" are "<<one_ring_neighbors<<" but prop says there should only be 2"<<std::endl);
                             return -1;
                         }
 
@@ -820,7 +820,7 @@ int StarShapifyableExpansionCone::split_base_non_extended_link_edges_not_connect
                                                                          path_to_split);
 
                     if(sp_result){
-                        std::cout<<" ERROR - couldn't find path to split starting from edge "<<edge(start_edge)<<std::endl;
+                        SS_DEBUG(" ERROR - couldn't find path to split starting from edge "<<edge(start_edge)<<std::endl);
                         return SS_ERROR;
                     }
 
@@ -850,7 +850,7 @@ int StarShapifyableExpansionCone::split_base_non_extended_link_edges_not_connect
     }
 
     if(i == max_iteration_count){
-        std::cout<<" ERROR - this shouldn't happen"<<std::endl;
+        SS_DEBUG(" ERROR - this shouldn't happen"<<std::endl);
         return -1;
     }
 
@@ -866,9 +866,9 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence(const int max_it
                                                                 std::vector<VertexHandle>& vertices_to_collapse){
 
 
-    std::cout<<" -----------------------------------------------"<<std::endl;
-    std::cout<<" ------ RUNNING REVERSE-SHELLING SEQUENCE ------"<<std::endl;
-    std::cout<<" -----------------------------------------------"<<std::endl;
+    SS_DEBUG(" -----------------------------------------------"<<std::endl);
+    SS_DEBUG(" ------ RUNNING REVERSE-SHELLING SEQUENCE ------"<<std::endl);
+    SS_DEBUG(" -----------------------------------------------"<<std::endl);
 
     int reverse_shelling_result(0);
     int iteration_count(0);
@@ -886,7 +886,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence(const int max_it
         reverse_shelling_result = run_reverse_shelling_sequence_internal(backtrack_splits_along_shortest_path,
                                                                          vertices_to_collapse);
         if(reverse_shelling_result == -1){
-            std::cout<<" - an error occured while running the reverse-shelling sequence"<<std::endl;
+            SS_DEBUG(" - an error occured while running the reverse-shelling sequence"<<std::endl);
             return SS_ERROR;
         }
 
@@ -906,7 +906,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence(const int max_it
 
 
     if(!reverse_shelling_result){
-        std::cout<<" - SUCCESFULLY RAN REVERSE-SHELLING SEQUENCE AFTER "<<iteration_count<<" ATTEMPTS USING "<<(backtrack_splits_along_shortest_path ? "SHORTEST-PATH" : "SAFE")<<" METHOD "<<std::endl;
+        SS_DEBUG(" - SUCCESFULLY RAN REVERSE-SHELLING SEQUENCE AFTER "<<iteration_count<<" ATTEMPTS USING "<<(backtrack_splits_along_shortest_path ? "SHORTEST-PATH" : "SAFE")<<" METHOD "<<std::endl);
         SS_DEBUG(" - original cone after reverse-shelling sequence:");
         IF_SS_DEBUG(print_details());
         SS_DEBUG(" ===============================================================");
@@ -962,9 +962,9 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
         SS_DEBUG(" ================= removing "<<(removed_vertices_count+1)<<"-th vertex...");
 
         if(removed_vertices_count && !(removed_vertices_count % 1000)){
-            std::cout<<" - removed "<<removed_vertices_count<<
+            SS_DEBUG(" - removed "<<removed_vertices_count<<
                        "/"<<vertices_to_collapse.size()<<
-                       " vertices, diff = "<<(vertices_to_collapse.size() - removed_vertices_count)<<std::endl;
+                       " vertices, diff = "<<(vertices_to_collapse.size() - removed_vertices_count)<<std::endl);
         }
 
         VertexHandle vertex_to_collapse(-1);
@@ -997,13 +997,12 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
                                                                                                         collapsed_prop_,
                                                                                                         min_index);
                 if(vertex_to_collapse.idx() == -1){
-                    std::cout<<" ERROR - couldn't find next vertex to collapse among "<<vertices_to_collapse<<std::endl;
-                    std::cout<<" trimmed copy details: "; trimmed_copy_.print_details();
+                    SS_DEBUG(" ERROR - couldn't find next vertex to collapse among "<<vertices_to_collapse<<std::endl);
+                    SS_DEBUG(" trimmed copy details: "); trimmed_copy_.print_details();
                     return -1;
                 }
 
-                c_val = trimmed_copy_.cell_valence(vertex_to_collapse);
-
+                IF_SS_DEBUG(c_val = trimmed_copy_.cell_valence(vertex_to_collapse);)
                 SS_DEBUG(" - min-valence vertex is "<<vertex_to_collapse<<" with cell-valence "<<c_val);
             }
 
@@ -1011,8 +1010,8 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
             //                                                                                        collapsed_prop_);
 
             if(!vertex_to_collapse.is_valid()){
-                std::cout<<" ERROR - couldn't find next vertex to collapse among "<<vertices_to_collapse<<std::endl;
-                std::cout<<" trimmed copy details: "; trimmed_copy_.print_details();
+                SS_DEBUG(" ERROR - couldn't find next vertex to collapse among "<<vertices_to_collapse<<std::endl);
+                SS_DEBUG(" trimmed copy details: "); trimmed_copy_.print_details();
                 return -1;
             }
         }else{
@@ -1044,7 +1043,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
                 auto to_split = find_trim_base_boundary_edge_to_start_split_path();
 
                 if(to_split.idx() ==-1){
-                    std::cout<<" ERROR - couldn't find base boundary edge to split"<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find base boundary edge to split"<<std::endl);
                     return SS_ERROR;
                 }
 
@@ -1055,7 +1054,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
                 int remaining_vertices_in_trimmed_copy = trimmed_copy_.n_logical_vertices();
 
                 if(remaining_vertices_in_trimmed_copy > remaining_trimmed_copy_vertices_at_last_RS_iteration_){
-                    std::cout<<" ERROR - there were "<<remaining_trimmed_copy_vertices_at_last_RS_iteration_<<" remaining vertices in the trimmed copy but now there are "<<remaining_vertices_in_trimmed_copy<<std::endl;
+                    SS_DEBUG(" ERROR - there were "<<remaining_trimmed_copy_vertices_at_last_RS_iteration_<<" remaining vertices in the trimmed copy but now there are "<<remaining_vertices_in_trimmed_copy<<std::endl);
                     return SS_ERROR;
                 }
                 remaining_trimmed_copy_vertices_at_last_RS_iteration_ = remaining_vertices_in_trimmed_copy;
@@ -1075,8 +1074,8 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
 
 
                 if(sp_result){
-                    std::cout<<" ERROR - couldn't find path to split starting from edge "<<edge(to_split)<<
-                               "using "<<(backtrack_splits_along_shortest_path ? "shortest-path " : "safe ")<<"method"<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find path to split starting from edge "<<edge(to_split)<<
+                               "using "<<(backtrack_splits_along_shortest_path ? "shortest-path " : "safe ")<<"method"<<std::endl);
                     return SS_ERROR;
                 }
 
@@ -1093,21 +1092,21 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
                         HalfEdgeHandle to_collapse(-1);
                         auto mid_vertex = split_list_.back().cone_new_vertex;
                         SS_DEBUG(" -- split edge is not an original one, collapsing the mid-vertex");
-                        //std::cout<<" -- split edge "<<edge(to_split)<<" is not an original one, collapsing the mid-vertex"<<std::endl;;
+                        //SS_DEBUG(" -- split edge "<<edge(to_split)<<" is not an original one, collapsing the mid-vertex"<<std::endl);;
 
                         base_collapse_count++;
                         for(auto out_he: outgoing_halfedges(mid_vertex)){
                             auto neighbor = to_vertex_handle(out_he);
                             if(neighbor.idx() + 1 == mid_vertex.idx()){
                                 SS_DEBUG(" ---> neighbor "<<neighbor<<" is the previous mid-vertex, collapsing edge "<<halfedge(out_he));
-                                //std::cout<<" ---> neighbor "<<neighbor<<" is the previous mid-vertex, collapsing edge "<<halfedge(out_he)<<std::endl;
+                                //SS_DEBUG(" ---> neighbor "<<neighbor<<" is the previous mid-vertex, collapsing edge "<<halfedge(out_he)<<std::endl);
 
                                 to_collapse = out_he;
                             }
                         }
 
                         if(!to_collapse.is_valid()){
-                            std::cout<<" ERROR - couldn't find an outoing halfedge from "<<mid_vertex<<" to collapse"<<std::endl;
+                            SS_DEBUG(" ERROR - couldn't find an outoing halfedge from "<<mid_vertex<<" to collapse"<<std::endl);
                             return SS_ERROR;
                         }
 
@@ -1120,7 +1119,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
 
                 SS_DEBUG(" -- last split was "<<split_list_.back());
                 return SS_RESET_REQUESTED;
-                //std::cout<<" ERROR - couldn't split an edge to unlock the situation"<<std::endl;
+                //SS_DEBUG(" ERROR - couldn't split an edge to unlock the situation"<<std::endl);
                 //return SS_EDGE_SPLIT_ERROR;
             }else{
                 vertices_to_collapse.push_back(split_list_.back().cone_new_vertex);
@@ -1131,9 +1130,9 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
         }
 
         if(c_val != 1 && c_val != 2){
-            std::cout<<" ERROR - couldn't find a valence-1 or valence-2 vertex to collapse"<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find a valence-1 or valence-2 vertex to collapse"<<std::endl);
 
-            std::cout<<" trimmed cone details:"; trimmed_copy_.print_details();
+            SS_DEBUG(" trimmed cone details:"); trimmed_copy_.print_details();
             return SS_ERROR;
         }
 
@@ -1152,7 +1151,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
                                                             collapse_depth_prop);
 
             if(update_result){
-                std::cout<<" ERROR - couldn't update target edge prop"<<std::endl;
+                SS_DEBUG(" ERROR - couldn't update target edge prop"<<std::endl);
                 return SS_ERROR;
             }
         }
@@ -1169,7 +1168,7 @@ int StarShapifyableExpansionCone::run_reverse_shelling_sequence_internal(bool ba
 
 
     if(base_collapse_count){
-        std::cout<<" - edges collapsed during RSS: "<<base_collapse_count<<std::endl;
+        SS_DEBUG(" - edges collapsed during RSS: "<<base_collapse_count<<std::endl);
     }
     SS_DEBUG(" --------------------------------------------------");
     SS_DEBUG(" ------ DONE WITH REVERSE SHELLING SEQUENCE -------");
@@ -1230,7 +1229,7 @@ int StarShapifyableExpansionCone::run_direct_reverse_shelling_sequence(std::vect
                 auto to_split = find_trim_base_boundary_edge_to_start_split_path();
 
                 if(to_split.idx() ==-1){
-                    std::cout<<" ERROR - couldn't find base boundary edge to split"<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find base boundary edge to split"<<std::endl);
                     return SS_ERROR;
                 }
 
@@ -1246,7 +1245,7 @@ int StarShapifyableExpansionCone::run_direct_reverse_shelling_sequence(std::vect
 
 
                 if(sp_result){
-                    std::cout<<" ERROR - couldn't find path to split starting from edge "<<edge(to_split)<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find path to split starting from edge "<<edge(to_split)<<std::endl);
                     return SS_ERROR;
                 }
 
@@ -1263,7 +1262,7 @@ int StarShapifyableExpansionCone::run_direct_reverse_shelling_sequence(std::vect
                                                                                                         collapsed_prop_);
 
                 if(vertex_to_collapse.is_valid()){
-                    std::cout<<" ERROR - couldn't immediately collapse new vertex"<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't immediately collapse new vertex"<<std::endl);
                     return SS_ERROR;
                 }
 
@@ -1271,7 +1270,7 @@ int StarShapifyableExpansionCone::run_direct_reverse_shelling_sequence(std::vect
 
 
                 return SS_RESET_REQUESTED;
-                //std::cout<<" ERROR - couldn't split an edge to unlock the situation"<<std::endl;
+                //SS_DEBUG(" ERROR - couldn't split an edge to unlock the situation"<<std::endl);
                 //return SS_EDGE_SPLIT_ERROR;
             }else{
                 vertices_to_collapse.push_back(split_list_.back().cone_new_vertex);
@@ -1282,9 +1281,9 @@ int StarShapifyableExpansionCone::run_direct_reverse_shelling_sequence(std::vect
         }
 
         if(c_val != 1 && c_val != 2){
-            std::cout<<" ERROR - couldn't find a valence-1 or valence-2 vertex to collapse"<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find a valence-1 or valence-2 vertex to collapse"<<std::endl);
 
-            std::cout<<" trimmed cone details:"; trimmed_copy_.print_details();
+            SS_DEBUG(" trimmed cone details:"; trimmed_copy_.print_details();
             return SS_ERROR;
         }
 
@@ -1300,7 +1299,7 @@ int StarShapifyableExpansionCone::run_direct_reverse_shelling_sequence(std::vect
                                                         collapse_depth_prop);
 
         if(update_result){
-            std::cout<<" ERROR - couldn't update target edge prop"<<std::endl;
+            SS_DEBUG(" ERROR - couldn't update target edge prop"<<std::endl);
             return SS_ERROR;
         }
 
@@ -1360,10 +1359,10 @@ int StarShapifyableExpansionCone::update_collapsed_edge_prop(const VertexHandle&
         if(!target_e.is_valid() ||
                 !source_e1.is_valid() ||
                 !source_e2.is_valid()){
-            std::cout<<" ERROR - couldn't find all the edges for vertex to collapse "<<vertex_to_remove<<std::endl;
-            std::cout<<" target edge = "<<target_e<<std::endl;
-            std::cout<<" source edge 1 = "<<source_e1<<std::endl;
-            std::cout<<" source edge 2 = "<<source_e2<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find all the edges for vertex to collapse "<<vertex_to_remove<<std::endl);
+            SS_DEBUG(" target edge = "<<target_e<<std::endl);
+            SS_DEBUG(" source edge 1 = "<<source_e1<<std::endl);
+            SS_DEBUG(" source edge 2 = "<<source_e2<<std::endl);
             return -1;
         }
 
@@ -1386,7 +1385,7 @@ int StarShapifyableExpansionCone::update_collapsed_edge_prop(const VertexHandle&
         SS_DEBUG(" --> removed vertex "<<vertex_to_remove<<" with cell valence = 2, target vertex is "<<target_v);
 
         if(!target_v.is_valid()){
-            std::cout<<" ERROR - couldn't find target vertex for vertex to collapse "<<vertex_to_remove<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find target vertex for vertex to collapse "<<vertex_to_remove<<std::endl);
             return -1;
         }
 
@@ -1398,15 +1397,15 @@ int StarShapifyableExpansionCone::update_collapsed_edge_prop(const VertexHandle&
                         v != target_v &&
                         !tip_vertices_prop_[v]){
 
-                    auto source_e = edge_handle(trimmed_copy_.halfedge(vertex_to_remove, v));
+                    auto source_e = edge_handle(trimmed_copy_.find_halfedge(vertex_to_remove, v));
                     if(!source_e.is_valid()){
-                        std::cout<<" ERROR - couldn't find source edge ("<<vertex_to_remove<<", "<<v<<")"<<std::endl;
+                        SS_DEBUG(" ERROR - couldn't find source edge ("<<vertex_to_remove<<", "<<v<<")"<<std::endl);
                         return -1;
                     }
 
-                    auto target_e = edge_handle(trimmed_copy_.halfedge(target_v, v));
+                    auto target_e = edge_handle(trimmed_copy_.find_halfedge(target_v, v));
                     if(!target_e.is_valid()){
-                        std::cout<<" ERROR - couldn't find target edge ("<<target_v<<", "<<v<<")"<<std::endl;
+                        SS_DEBUG(" ERROR - couldn't find target edge ("<<target_v<<", "<<v<<")"<<std::endl);
                         return -1;
                     }
 
@@ -1418,7 +1417,7 @@ int StarShapifyableExpansionCone::update_collapsed_edge_prop(const VertexHandle&
             }
         }
         if(added_edges != 2){
-            std::cout<<" ERROR - found "<<added_edges<<" collapsed edges instead of 2"<<std::endl;
+            SS_DEBUG(" ERROR - found "<<added_edges<<" collapsed edges instead of 2"<<std::endl);
             return -1;
         }
     }
@@ -1445,7 +1444,7 @@ EdgeHandle StarShapifyableExpansionCone::find_trim_base_boundary_edge_to_start_s
             auto base_op_vertex = opposite_trim_base_vertex(eh);
 
             if(!base_op_vertex.is_valid()){
-                std::cout<<" ERROR - couldn't recover trim base op vertex to boundary edge "<<edge(eh)<<std::endl;
+                SS_DEBUG(" ERROR - couldn't recover trim base op vertex to boundary edge "<<edge(eh)<<std::endl);
                 return EdgeHandle(-1);
             }
 
@@ -1466,16 +1465,16 @@ EdgeHandle StarShapifyableExpansionCone::find_trim_base_boundary_edge_to_start_s
             auto to_v   = trimmed_copy_.edge(eh).to_vertex();
             if(witness_vertex_1_ring_base_vertex_prop_[from_v]){
                 incident_vertex_cell_valence = trimmed_copy_.cell_valence(to_v);
-                //std::cout<<" --> using to-vertex "<<to_v<<" cell valence = "<<incident_vertex_cell_valence<<std::endl;
+                //SS_DEBUG(" --> using to-vertex "<<to_v<<" cell valence = "<<incident_vertex_cell_valence<<std::endl);
             }else if(witness_vertex_1_ring_base_vertex_prop_[to_v]){
                 incident_vertex_cell_valence = trimmed_copy_.cell_valence(from_v);
-                //std::cout<<" --> using from-vertex "<<from_v<<" cell valence = "<<incident_vertex_cell_valence<<std::endl;
+                //SS_DEBUG(" --> using from-vertex "<<from_v<<" cell valence = "<<incident_vertex_cell_valence<<std::endl);
             }else{
                 incident_vertex_cell_valence = std::min(trimmed_copy_.cell_valence(to_v),
                                                         trimmed_copy_.cell_valence(from_v));
-                /*std::cout<<" --> from-vertex "<<from_v<<" cell valence = "<<trimmed_copy_.cell_valence(from_v)<<std::endl;
-                std::cout<<" --> to-vertex "<<to_v<<" cell valence = "<<trimmed_copy_.cell_valence(to_v)<<std::endl;
-                std::cout<<" ---> using "<<incident_vertex_cell_valence<<std::endl;*/
+                /*SS_DEBUG(" --> from-vertex "<<from_v<<" cell valence = "<<trimmed_copy_.cell_valence(from_v)<<std::endl);
+                SS_DEBUG(" --> to-vertex "<<to_v<<" cell valence = "<<trimmed_copy_.cell_valence(to_v)<<std::endl);
+                SS_DEBUG(" ---> using "<<incident_vertex_cell_valence<<std::endl);*/
 
 
             }
@@ -1487,15 +1486,15 @@ EdgeHandle StarShapifyableExpansionCone::find_trim_base_boundary_edge_to_start_s
                 min_incident_vertex_cell_valence = incident_vertex_cell_valence;
 
                 if(min_incident_vertex_cell_valence < 3){
-                    std::cout<<" ERROR - this shouldn't happen. If there's a vertex with cell-valence < 3 it should be removable"<<std::endl;
-                    std::cout<<" cells around to-vertex "<<to_v<<": "<<std::endl;
+                    SS_DEBUG(" ERROR - this shouldn't happen. If there's a vertex with cell-valence < 3 it should be removable"<<std::endl);
+                    SS_DEBUG(" cells around to-vertex "<<to_v<<": "<<std::endl);
                     for(auto vc_it = trimmed_copy_.vc_iter(to_v); vc_it.valid(); vc_it++){
-                        std::cout<<" - "<<get_cell_vertices(*vc_it)<<std::endl;
+                        SS_DEBUG(" - "<<get_cell_vertices(*vc_it)<<std::endl);
                     }
-                    //std::cout<<" temporarily trying this out"<<std::endl;
+                    //SS_DEBUG(" temporarily trying this out"<<std::endl);
                     return EdgeHandle(-1);
                 }else if(min_incident_vertex_cell_valence == std::numeric_limits<int>::max()){
-                    std::cout<<" ERROR - couldn't find a boundary edge to split, which shouldn't happen"<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find a boundary edge to split, which shouldn't happen"<<std::endl);
                     return EdgeHandle(-1);
                 }else if(min_incident_vertex_cell_valence == 3){
                     SS_DEBUG(" ---> min cell valence == 3, using this one");
@@ -1546,8 +1545,8 @@ int StarShapifyableExpansionCone::split_non_blocking_base_boundary_edge(){
                     }
                 }
                 if(op_vertex.idx() == -1){
-                    std::cout<<" ERROR - couldn't find op vertex to edge "<<edge(eh)<<
-                               " on face "<<get_halfface_vertices(halfface_handle(*ef_it, 0))<<std::endl;
+                    SS_DEBUG(" ERROR - couldn't find op vertex to edge "<<edge(eh)<<
+                               " on face "<<get_halfface_vertices(halfface_handle(*ef_it, 0))<<std::endl);
                     return SS_ERROR;
                 }
 
@@ -1597,12 +1596,12 @@ int StarShapifyableExpansionCone::split_non_blocking_base_boundary_edge(){
 
 int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<VertexHandle>& vertices_to_collapse){
 
-    std::cout<<" ------------------------------------------"<<std::endl;
-    std::cout<<" ------- RUNNING COLLAPSE SEQUENCE --------"<<std::endl;
-    std::cout<<" ------------------------------------------"<<std::endl;
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
+    SS_DEBUG(" ------- RUNNING COLLAPSE SEQUENCE --------"<<std::endl);
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
 
     SS_DEBUG(" full reverse-shelling sequence: "<<full_reverse_shelling_sequence_);
-    //std::cout<<" full reverse-shelling sequence: "<<full_reverse_shelling_sequence_<<std::endl;
+    //SS_DEBUG(" full reverse-shelling sequence: "<<full_reverse_shelling_sequence_<<std::endl);
 
     //while(collapsed_vertices_count < (int)vertices_to_collapse.size()){
     int i(0);
@@ -1627,7 +1626,7 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
                                            get_position_from_face(target_face));
 
             if(!v_prime.is_valid()){
-                std::cout<<" error while collapsing vertex"<<std::endl;
+                SS_DEBUG(" error while collapsing vertex"<<std::endl);
                 return -1;
             }
 
@@ -1641,7 +1640,7 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
 
             auto target_edge = find_target_edge(vertex_to_collapse);
             if(target_edge.idx() == -1){
-                std::cout<< "error while trying to find target edge"<<std::endl;
+                SS_DEBUG( "error while trying to find target edge"<<std::endl);
                 return -1;
             }
             SS_DEBUG(" -> collapsing vertex "<<vertex_to_collapse<<" to edge "<<edge(target_edge));
@@ -1650,7 +1649,7 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
                                            get_position_from_edge(target_edge));
 
             if(!v_prime.is_valid()){
-                std::cout<<" error while collapsing vertex"<<std::endl;
+                SS_DEBUG(" error while collapsing vertex"<<std::endl);
                 return -1;
             }
 
@@ -1660,8 +1659,8 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
             break;
         }
         default:{
-            std::cout<<" ERROR - next vertex in reverse-shelling sequence is cell-valence "<<c_val<<std::endl;
-            std::cout<<" trimmed cone details:"; trimmed_copy_.print_details();
+            SS_DEBUG(" ERROR - next vertex in reverse-shelling sequence is cell-valence "<<c_val<<std::endl);
+            SS_DEBUG(" trimmed cone details:"); trimmed_copy_.print_details();
             return 1;
         }
         }
@@ -1669,9 +1668,9 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
 #if ENABLE_BAD_TETS_CHECKS_IN_LOOPS
         auto bad_tets = ExactBadTetFinder::findBadTets(*this, vertex_position_prop_);
         if(bad_tets.second.size()){
-            std::cout<<" ERROR - cone contains flipped tets after collapse:"<<std::endl;
+            SS_DEBUG(" ERROR - cone contains flipped tets after collapse:"<<std::endl);
             for(auto bad_tet: bad_tets.second){
-                std::cout<<" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl;
+                SS_DEBUG(" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl);
             }
             return -1;
         }
@@ -1686,9 +1685,9 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
         i++;
     }
 
-    std::cout<<" ------------------------------------------"<<std::endl;
-    std::cout<<" ------ DONE WITH COLLAPSE SEQUENCE -------"<<std::endl;
-    std::cout<<" ------------------------------------------"<<std::endl;
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
+    SS_DEBUG(" ------ DONE WITH COLLAPSE SEQUENCE -------"<<std::endl);
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
 
     return 0;
 }
@@ -1700,12 +1699,12 @@ int StarShapifyableExpansionCone::run_collapse_sequence(const std::vector<Vertex
 
 int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision){
 
-    std::cout<<" ------------------------------------------"<<std::endl;
-    std::cout<<" ------ RUNNING CONTRACTION SEQUENCE ------"<<std::endl;
-    std::cout<<" ------------------------------------------"<<std::endl;
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
+    SS_DEBUG(" ------ RUNNING CONTRACTION SEQUENCE ------"<<std::endl);
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
 
     if(!vertices_to_contract_.empty()){
-        std::cout<<" ERROR - vertices to contract list is not empty"<<std::endl;
+        SS_DEBUG(" ERROR - vertices to contract list is not empty"<<std::endl);
         return -1;
     }
 
@@ -1722,30 +1721,30 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
     auto geo_exp_result = updated_cone.is_geo_expandable(pos);
 
     if(geo_exp_result){
-        std::cout<<" ERROR - temp check for geo-exp failed before contraction"<<std::endl;
-        std::cout<<" updated cone: "<<std::endl;
+        SS_DEBUG(" ERROR - temp check for geo-exp failed before contraction"<<std::endl);
+        SS_DEBUG(" updated cone: "<<std::endl);
         updated_cone.print_details();
-        std::cout<<" cone: "<<std::endl;
+        SS_DEBUG(" cone: "<<std::endl);
         print_details();
         return -1;
     }*/
 
-    std::cout<<" ==================================== 1-ring contraction "<<std::endl;
+    SS_DEBUG(" ==================================== 1-ring contraction "<<std::endl);
     //1. contract the 1-ring neighborhood and other tip vertices
     auto core_contraction_result = contract_core();
     if(core_contraction_result){
-        std::cout<<" ERROR - failed to contract core"<<std::endl;
+        SS_DEBUG(" ERROR - failed to contract core"<<std::endl);
         return -1;
     }
 
 
 //#if ENABLE_BAD_TETS_CHECKS_OUT_OF_LOOPS
-    auto initial_flipped_start = std::chrono::high_resolution_clock::now();
+    IF_SS_DEBUG(auto initial_flipped_start = std::chrono::high_resolution_clock::now(););
     if(ExactBadTetFinder::meshContainsFlippedTets(*this, vertex_position_prop_)){
-        std::cout<<" ERROR - cone contains flipped tets after contracting 1-ring neighborhood: "<<std::endl;
+        SS_DEBUG(" ERROR - cone contains flipped tets after contracting 1-ring neighborhood: "<<std::endl);
         auto flipped_tets = ExactBadTetFinder::findBadTets(*this, vertex_position_prop_).second;
         for(auto flipped_tet: flipped_tets){
-            std::cout<<" - "<<flipped_tet<<": "<<get_cell_vertices(flipped_tet)<<std::endl;
+            SS_DEBUG(" - "<<flipped_tet<<": "<<get_cell_vertices(flipped_tet)<<std::endl);
         }
         return -1;
     }
@@ -1754,12 +1753,12 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 #if ENABLE_TIMINGS
     auto initial_flipped_end = std::chrono::high_resolution_clock::now();
     float initial_flipped_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(initial_flipped_end - initial_flipped_start).count() / 1000000;
-    std::cout<<" - initial flipped test check duration: "<<initial_flipped_duration_s<<std::endl;
+    SS_DEBUG(" - initial flipped test check duration: "<<initial_flipped_duration_s<<std::endl);
 #endif
 
     for(auto v: vertices()){
         contracted_prop_[v] = true;
-        //std::cout<<" - set "<<v<<" as contracted"<<std::endl;
+        //SS_DEBUG(" - set "<<v<<" as contracted"<<std::endl);
     }
 
     //this allows to skip vertices that had nothing collapsed to
@@ -1772,15 +1771,15 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
     }
 
 
-    std::cout<<" ==================================== full contraction "<<std::endl;
+    SS_DEBUG(" ==================================== full contraction "<<std::endl);
 
     for(auto& collapse: collapse_list_){
         vertices_to_contract_.push_back(collapse.first);
         contracted_prop_[collapse.first] = false;
-        //std::cout<<" - set "<<collapse.first<<" as uncontracted"<<std::endl;
+        //SS_DEBUG(" - set "<<collapse.first<<" as uncontracted"<<std::endl);
     }
 
-    //std::cout<<" - vertices to contract (reverse order): "<<vertices_to_contract_<<std::endl;
+    //SS_DEBUG(" - vertices to contract (reverse order): "<<vertices_to_contract_<<std::endl);
 
     for(int i(collapse_list_.size()-1); i>= 0; i--){
         auto& collapse = collapse_list_[i];
@@ -1791,12 +1790,12 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
         check_for_timeout();
 
         if(vertices_to_contract_.back() != collapse.first){
-            std::cout<<" ERROR - back of vertices to contract vector is "<<vertices_to_contract_.back()<<" and last contracted vertex is "<<collapse.first<<std::endl;
+            SS_DEBUG(" ERROR - back of vertices to contract vector is "<<vertices_to_contract_.back()<<" and last contracted vertex is "<<collapse.first<<std::endl);
             return -1;
         }
         vertices_to_contract_.pop_back();
         contracted_prop_[collapse.first] = true;
-        //std::cout<<" - set "<<collapse.first<<" as contracted"<<std::endl;
+        //SS_DEBUG(" - set "<<collapse.first<<" as contracted"<<std::endl);
 
         if(collapsed_to_prop[collapse.first].empty()){
             //SS_DEBUG(" --> nothing was collapsed to vertex "<<collapse.first<<", skipping");
@@ -1805,10 +1804,10 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 
         //NOTE: moving this here because we don't care about vertices that don't need to be contracted
 #if ENABLE_TIMINGS
-        std::cout<<" -----------------------------------------------------------------------------"<<std::endl;
-        std::cout<<" ------- handling collapse "<<i<<": "<<collapse.first<<" -> "<<collapse.second<<std::endl;
-        std::cout<<" --> remaining vertices to contract: "<<(vertices_to_contract_.size()+1)<<"/"<<collapse_list_.size()<<std::endl;
-        std::cout<<" --> max position size = "<<new_position_max_precision_<<std::endl;
+        SS_DEBUG(" -----------------------------------------------------------------------------"<<std::endl);
+        SS_DEBUG(" ------- handling collapse "<<i<<": "<<collapse.first<<" -> "<<collapse.second<<std::endl);
+        SS_DEBUG(" --> remaining vertices to contract: "<<(vertices_to_contract_.size()+1)<<"/"<<collapse_list_.size()<<std::endl);
+        SS_DEBUG(" --> max position size = "<<new_position_max_precision_<<std::endl);
 #endif
 
 #warning TODO: put this in function
@@ -1824,7 +1823,7 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
         if(needs_to_be_updated){
             SS_DEBUG(" ---> one of the target vertices has a secondary vertex, updating to "<<collapse.second);
 
-            auto contr_pos_start = std::chrono::high_resolution_clock::now();
+            IF_SS_DEBUG(auto contr_pos_start = std::chrono::high_resolution_clock::now(););
             auto contraction_pos = get_contraction_position_from_vertices(collapse.first,
                                                                           collapse.second,
                                                                           collapsed_to_prop);
@@ -1832,16 +1831,16 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
             //temp check
 #if 0
             auto v_dist = CGAL::squared_distance(OVMvec3ToCGALPoint3(contraction_pos), OVMvec3ToCGALPoint3(vertex(*cone_tip_vertices().begin())));
-            //std::cout<<" --- contraction position to tip distance = "<<CGAL::to_double(v_dist)<<std::endl;
+            //SS_DEBUG(" --- contraction position to tip distance = "<<CGAL::to_double(v_dist)<<std::endl);
             ExactType target_min_distance(std::numeric_limits<double>::max());
             for(auto target_v: collapse.second){
                 if(is_cone_tip(target_v)){
                     continue;
                 }
                 auto dist = CGAL::squared_distance(OVMvec3ToCGALPoint3(vertex(target_v)), OVMvec3ToCGALPoint3(vertex(*cone_tip_vertices().begin())));
-                //std::cout<<" --- distance to tip for target vertex "<<target_v<<" = "<<CGAL::to_double(dist)<<std::endl;
+                //SS_DEBUG(" --- distance to tip for target vertex "<<target_v<<" = "<<CGAL::to_double(dist)<<std::endl);
                 /*if(dist < v_dist){
-                    std::cout<<" ERROR - contraction position is at "<<CGAL::to_double(v_dist)<<" >= target distance "<<CGAL::to_double(dist)<<std::endl;
+                    SS_DEBUG(" ERROR - contraction position is at "<<CGAL::to_double(v_dist)<<" >= target distance "<<CGAL::to_double(dist)<<std::endl);
                     return -1;
                 }*/
             }
@@ -1853,11 +1852,11 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 #if ENABLE_TIMINGS
             auto contr_pos_end = std::chrono::high_resolution_clock::now();
             float contr_pos_start_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(contr_pos_end - contr_pos_start).count() / 1000000;
-            std::cout<<" - contraction position computation duration: "<<contr_pos_start_duration_s<<std::endl;
+            SS_DEBUG(" - contraction position computation duration: "<<contr_pos_start_duration_s<<std::endl);
 #endif
 
 
-            auto split_spoke_start = std::chrono::high_resolution_clock::now();
+            IF_SS_DEBUG(auto split_spoke_start = std::chrono::high_resolution_clock::now(););
             auto secondary_v_prime = split_spoke_and_move_vertex(collapse.first,
                                                                  contraction_pos,
                                                                  collapse.second,
@@ -1866,11 +1865,11 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 #if ENABLE_TIMINGS
             auto split_spoke_end = std::chrono::high_resolution_clock::now();
             float split_spoke_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(split_spoke_end - split_spoke_start).count() / 1000000;
-            std::cout<<" - split spoke duration: "<<split_spoke_duration_s<<std::endl;
+            SS_DEBUG(" - split spoke duration: "<<split_spoke_duration_s<<std::endl);
 #endif
 
             if(!secondary_v_prime.is_valid()){
-                std::cout<<" error while trying to split spoke"<<std::endl;
+                SS_DEBUG(" error while trying to split spoke"<<std::endl);
                 return -1;
             }
             collapse.first = secondary_v_prime;
@@ -1878,21 +1877,21 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 
 #if ENABLE_BAD_TETS_CHECKS_IN_LOOPS
             if(ExactBadTetFinder::meshContainsFlippedTets(*this, vertex_position_prop_)){
-                std::cout<<" ERROR - cone contains flipped tets after handling collapse "<<collapse.first<<" -> "<<collapse.second<<std::endl;
+                SS_DEBUG(" ERROR - cone contains flipped tets after handling collapse "<<collapse.first<<" -> "<<collapse.second<<std::endl);
                 auto flipped_tets = ExactBadTetFinder::findBadTets(*this, vertex_position_prop_).second;
                 for(auto flipped_tet: flipped_tets){
-                    std::cout<<" - "<<flipped_tet<<": "<<get_cell_vertices(flipped_tet)<<std::endl;
+                    SS_DEBUG(" - "<<flipped_tet<<": "<<get_cell_vertices(flipped_tet)<<std::endl);
                 }
                 return -1;
             }
 #endif
 
             contracted_prop_[collapse.first] = true;
-            //std::cout<<" - set "<<collapse.first<<" as contracted"<<std::endl;
+            //SS_DEBUG(" - set "<<collapse.first<<" as contracted"<<std::endl);
 
 #warning TODO: remove this once validated
         }else{
-            std::cout<<" ERROR - A vertex to contract has no updated target vertex"<<std::endl;
+            SS_DEBUG(" ERROR - A vertex to contract has no updated target vertex"<<std::endl);
             return -1;
         }
 
@@ -1907,7 +1906,7 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
         auto geo_exp_result = updated_cone.is_geo_expandable(pos);
 
         if(geo_exp_result){
-            std::cout<<" ERROR - temp check for geo-exp failed after contracting vertex "<<collapse.first<<std::endl;
+            SS_DEBUG(" ERROR - temp check for geo-exp failed after contracting vertex "<<collapse.first<<std::endl);
             updated_cone.print_details();
             return -1;
         }
@@ -1915,7 +1914,7 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 #if ENABLE_TIMINGS
         auto one_ring_check_end = std::chrono::high_resolution_clock::now();
         float one_ring_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(one_ring_check_end - one_ring_check_start).count() / 1000000;
-        std::cout<<" - 1-ring check duration: "<<one_ring_check_duration_s<<std::endl;
+        SS_DEBUG(" - 1-ring check duration: "<<one_ring_check_duration_s<<std::endl);
 #endif
 #endif
 
@@ -1923,16 +1922,16 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
         auto flipped_tets_check_start = std::chrono::high_resolution_clock::now();
         auto bad_tets = ExactBadTetFinder::findBadTets(*this, vertex_position_prop_);
         if(bad_tets.second.size()){
-            std::cout<<" ERROR - cone contains flipped tets after contraction:"<<std::endl;
+            SS_DEBUG(" ERROR - cone contains flipped tets after contraction:"<<std::endl);
             for(auto bad_tet: bad_tets.second){
-                std::cout<<" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl;
+                SS_DEBUG(" - "<<bad_tet<<" :" <<get_cell_vertices(bad_tet)<<std::endl);
             }
             return -1;
         }
 #if ENABLE_TIMINGS
         auto flipped_tets_check_end = std::chrono::high_resolution_clock::now();
         float flipped_tets_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(flipped_tets_check_end - flipped_tets_check_start).count() / 1000000;
-        std::cout<<" - flipped tets check duration: "<<flipped_tets_check_duration_s<<std::endl;
+        SS_DEBUG(" - flipped tets check duration: "<<flipped_tets_check_duration_s<<std::endl);
 #endif
 #endif
 
@@ -1942,13 +1941,13 @@ int StarShapifyableExpansionCone::run_contraction_sequence(bool reduce_precision
 
     }
 
-    auto contraction_end = std::chrono::high_resolution_clock::now();
-    float contraction_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(contraction_end - contraction_start).count() / 1000000;
-    std::cout<<" - total contraction duration: "<<contraction_duration_s<<std::endl;
+    IF_SS_DEBUG(auto contraction_end = std::chrono::high_resolution_clock::now();)
+    IF_SS_DEBUG(float contraction_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(contraction_end - contraction_start).count() / 1000000;);
+    SS_DEBUG(" - total contraction duration: "<<contraction_duration_s<<std::endl);
 
-    std::cout<<" ------------------------------------------"<<std::endl;
-    std::cout<<" ----- DONE WITH CONTRACTION SEQUENCE -----"<<std::endl;
-    std::cout<<" ------------------------------------------"<<std::endl;
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
+    SS_DEBUG(" ----- DONE WITH CONTRACTION SEQUENCE -----"<<std::endl);
+    SS_DEBUG(" ------------------------------------------"<<std::endl);
 
     return 0;
 }
@@ -1978,7 +1977,7 @@ int StarShapifyableExpansionCone::contract_core(){
 
             if(val == 3 && val == c_val){
                 //valence_3_spoke_prop[neighbor] = true;
-                std::cout<<" ERROR - found valence-3 spoke in core"<<std::endl;
+                SS_DEBUG(" ERROR - found valence-3 spoke in core"<<std::endl);
                 return -1;
             }
         }
@@ -1994,7 +1993,7 @@ int StarShapifyableExpansionCone::contract_core(){
     }
 
     SS_DEBUG(" ---------------------------------");
-    const auto witness_tip_vertex = from_vertex_handle(base_vertex_to_spoke_edge_prop_[witness_vertex_]);
+    IF_SS_DEBUG(const auto witness_tip_vertex = from_vertex_handle(base_vertex_to_spoke_edge_prop_[witness_vertex_]););
     SS_DEBUG(" - contracting core around edge "<<witness_tip_vertex<<"-"<<witness_vertex_);
 
 
@@ -2015,18 +2014,18 @@ int StarShapifyableExpansionCone::contract_core(){
             }
         }*/
 
-        auto hfh = halfface(spoke_face_vertices);
+        auto hfh = find_halfface(spoke_face_vertices);
         if(hfh.idx() == -1){
-            std::cout<<" ERROR - couldn't recover halfface handle"<<std::endl;
+            SS_DEBUG(" ERROR - couldn't recover halfface handle"<<std::endl);
             return -1;
         }
-        //std::cout<<" -- halfface handle: "<<hfh<<std::endl;
+        //SS_DEBUG(" -- halfface handle: "<<hfh<<std::endl);
         auto op_hfh = opposite_halfface_handle(hfh);
         if(op_hfh.idx() == -1){
-            std::cout<<" ERROR - couldn't recover opposite halfface handle"<<std::endl;
+            SS_DEBUG(" ERROR - couldn't recover opposite halfface handle"<<std::endl);
             return -1;
         }
-        //std::cout<<" -- opposite halfface handle: "<<op_hfh<<std::endl;
+        //SS_DEBUG(" -- opposite halfface handle: "<<op_hfh<<std::endl);
 
 
         //hf opposite to the boundary hf
@@ -2049,7 +2048,7 @@ int StarShapifyableExpansionCone::contract_core(){
                                                    {witness_vertex_, *cone_tip_vertices().begin()});
 
         if(!v_prime.is_valid()){
-            std::cout<<" error while splitting spoke"<<std::endl;
+            SS_DEBUG(" error while splitting spoke"<<std::endl);
             return -1;
         }
         //temporary
@@ -2060,14 +2059,14 @@ int StarShapifyableExpansionCone::contract_core(){
 
     //special stuff for clusters starts here
     if(cone_tip_vertices_.size() > 1){
-        std::cout<<" ERROR - cluster stuff not ready"<<std::endl;
+        SS_DEBUG(" ERROR - cluster stuff not ready"<<std::endl);
         return -1;
         //do a BFS to set-up the tip vertices layers
         auto visited_prop = request_vertex_property<bool>();
         std::vector<std::vector<VertexHandle>> tip_layers;
         std::vector<VertexHandle> to_visit = {witness_vertex_};
         while(!to_visit.empty()){
-            std::cout<<" -- gathering layer "<<(tip_layers.size()+1)<<" tips"<<std::endl;
+            SS_DEBUG(" -- gathering layer "<<(tip_layers.size()+1)<<" tips"<<std::endl);
             auto current_tip = to_visit.back();
             to_visit.pop_back();
             visited_prop[current_tip] = true;
@@ -2082,7 +2081,7 @@ int StarShapifyableExpansionCone::contract_core(){
                 }
             }
 
-            std::cout<<" -- layer "<<(tip_layers.size()+1)<<": "<<next_layer<<std::endl;
+            SS_DEBUG(" -- layer "<<(tip_layers.size()+1)<<": "<<next_layer<<std::endl);
             if(!next_layer.empty()){
                 tip_layers.push_back(next_layer);
             }
@@ -2094,8 +2093,8 @@ int StarShapifyableExpansionCone::contract_core(){
 
     }
 
-    std::cout<<" ...done with core contraction"<<std::endl;
-    std::cout<<" ---------------------------------"<<std::endl;
+    SS_DEBUG(" ...done with core contraction"<<std::endl);
+    SS_DEBUG(" ---------------------------------"<<std::endl);
 
     return 0;
 }
@@ -2109,7 +2108,7 @@ VertexHandle StarShapifyableExpansionCone::collapse_vertex(const VertexHandle& c
 
     auto cone_v_prime = split_spoke_and_move_vertex(cone_v, new_position, {});
     if(!cone_v_prime.is_valid()){
-        std::cout<<" error while splitting spoke"<<std::endl;
+        SS_DEBUG(" error while splitting spoke"<<std::endl);
         return VertexHandle(-1);
     }
 
@@ -2132,16 +2131,16 @@ VertexHandle StarShapifyableExpansionCone::collapse_vertex(const VertexHandle& c
             SS_DEBUG(" ---> one of the target vertices has a secondary vertex, updating to "<<collapse.second);
             auto secondary_v_prime = split_spoke_and_move_vertex(collapse.first, get_position_from_vertices(collapse.second), {});
             if(!secondary_v_prime.is_valid()){
-                std::cout<<" error while splitting spoke"<<std::endl;
+                SS_DEBUG(" error while splitting spoke"<<std::endl);
                 return VertexHandle(-1);
             }
             collapse.first = secondary_v_prime;
             SS_DEBUG(" ---> updated collapse to "<<collapse.first<<" -> "<<collapse.second);
         }else{
-            //std::cout<<" ---> nothing was updated, skipping"<<std::endl;
+            //SS_DEBUG(" ---> nothing was updated, skipping"<<std::endl);
         }
 
-        //std::cout<<" -------"<<std::endl;
+        //SS_DEBUG(" -------"<<std::endl);
     }
 
 
@@ -2162,13 +2161,13 @@ VertexHandle StarShapifyableExpansionCone::get_last_secondary_vertex(const Verte
     VertexHandle secondary_v(-1);
     VertexHandle next_secondary_v(secondary_vertex_prop_[vh]);
 
-    //std::cout<<" - "<<vh;
+    //SS_DEBUG(" - "<<vh;
     while(next_secondary_v.idx() != -1){
         secondary_v = next_secondary_v;
         next_secondary_v = secondary_vertex_prop_[secondary_v];
-        //std::cout<<" -> "<<secondary_v;
+        //SS_DEBUG(" -> "<<secondary_v;
     }
-    //std::cout<<"---->"<<secondary_v<<std::endl;
+    //SS_DEBUG("---->"<<secondary_v<<std::endl);
 
     return secondary_v;
 }
@@ -2213,12 +2212,12 @@ VertexHandle StarShapifyableExpansionCone::opposite_trim_base_vertex(const EdgeH
 EdgeHandle StarShapifyableExpansionCone::find_target_edge(const VertexHandle& vh) const{
     //basically find the only face that is interior
     FaceHandle interior_face(-1);
-    //std::cout<<" - looking for target edge to collapse vertex "<<vh<<std::endl;
+    //SS_DEBUG(" - looking for target edge to collapse vertex "<<vh<<std::endl);
     for(auto vf_it = trimmed_copy_.vf_iter(vh); vf_it.valid(); vf_it++){
         if(!trimmed_copy_.is_boundary(*vf_it)){
-            //std::cout<<" -- checking boundary face "<<get_halfface_vertices(halfface_handle(*vf_it, 0))<<std::endl;
+            //SS_DEBUG(" -- checking boundary face "<<get_halfface_vertices(halfface_handle(*vf_it, 0))<<std::endl);
             if(interior_face.idx() != -1){
-                std::cout<<" ERROR - found two interior faces..."<<std::endl;
+                SS_DEBUG(" ERROR - found two interior faces..."<<std::endl);
                 return EdgeHandle(-1);
             }
 
@@ -2226,7 +2225,7 @@ EdgeHandle StarShapifyableExpansionCone::find_target_edge(const VertexHandle& vh
         }
     }
     if(interior_face.idx() == -1){
-        std::cout<<" ERROR - couldn't find an interior face"<<std::endl;
+        SS_DEBUG(" ERROR - couldn't find an interior face"<<std::endl);
         return EdgeHandle(-1);
     }
 
@@ -2238,9 +2237,9 @@ EdgeHandle StarShapifyableExpansionCone::find_target_edge(const VertexHandle& vh
 VertexHandle StarShapifyableExpansionCone::find_RS_target_vertex(const VertexHandle& vh) const{
     VertexHandle target(-1);
     for(auto out_he: trimmed_copy_.outgoing_halfedges(vh)){
-        /*std::cout<<" - trying edge "<<halfedge(out_he)<<
+        /*SS_DEBUG(" - trying edge "<<halfedge(out_he)<<
                    ", base boundary: "<<trimmed_copy_.is_base_boundary_edge(edge_handle(out_he))<<
-                   ", tip vertex: "<<tip_vertices_prop_[to_vertex_handle(out_he)]<<std::endl;*/
+                   ", tip vertex: "<<tip_vertices_prop_[to_vertex_handle(out_he)]<<std::endl);*/
         if(!trimmed_copy_.is_base_boundary_edge(edge_handle(out_he)) &&
                 !tip_vertices_prop_[to_vertex_handle(out_he)]){
             return to_vertex_handle(out_he);
@@ -2276,7 +2275,7 @@ VertexPosition StarShapifyableExpansionCone::get_position_from_vertices(const st
                 vertex(vertices[2]) +
                 vertex(vertices[3]))/4;
     default: {
-        std::cout<<" ERROR - unhandled case"<<std::endl;
+        SS_DEBUG(" ERROR - unhandled case"<<std::endl);
         return {0,0,0};
     }
     }
@@ -2299,9 +2298,9 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
         ExpansionCone one_ring;
         auto tip = *(cone_tip_vertices().begin());
 
-        auto spoke_edge = halfedge(vertex_to_contract, tip);
+        auto spoke_edge = find_halfedge(vertex_to_contract, tip);
         if(!spoke_edge.is_valid()){
-            std::cout<<" ERROR - couldn't find spoke edge for vertex "<<vertex_to_contract<<std::endl;
+            SS_DEBUG(" ERROR - couldn't find spoke edge for vertex "<<vertex_to_contract<<std::endl);
             return {0,0,0};
         }
 
@@ -2314,22 +2313,22 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
 
         for(auto hec_it = hec_iter(spoke_edge); hec_it.valid(); hec_it++){
 
-            //std::cout<<"   --- adding its vertices"<<std::endl;
+            //SS_DEBUG("   --- adding its vertices"<<std::endl);
             auto c_vertices = get_cell_vertices(*hec_it);
             for(auto cv: c_vertices){
-                //std::cout<<"      ---- adding vertex "<<cv<<std::endl;
+                //SS_DEBUG("      ---- adding vertex "<<cv<<std::endl);
                 if(!added_vertex_prop[cv]){
                     one_ring.add_vertex(cv, vertex_position_prop_[cv]);
                     added_vertex_prop[cv] = true;
-                    //std::cout<<"        --> added vertex "<<cv<<std::endl;
+                    //SS_DEBUG("        --> added vertex "<<cv<<std::endl);
                 }else{
-                    //std::cout<<"        --> already added "<<std::endl;
+                    //SS_DEBUG("        --> already added "<<std::endl);
                 }
             }
 
             auto cone_c = one_ring.add_cell(*hec_it, c_vertices);
             if(cone_c.idx() == -1){
-                std::cout<<" error while adding cell "<<c_vertices<<" incident to edge "<<halfedge(spoke_edge)<<std::endl;
+                SS_DEBUG(" error while adding cell "<<c_vertices<<" incident to edge "<<halfedge(spoke_edge)<<std::endl);
                 return {0,0,0};
             }
         }
@@ -2338,7 +2337,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
         VertexPosition new_pos;
         auto exp = one_ring.is_geo_expandable(new_pos);
         if(exp){
-            std::cout<<" ERROR - contraction cone is not expandable"<<std::endl;
+            SS_DEBUG(" ERROR - contraction cone is not expandable"<<std::endl);
             one_ring.print_details();
             one_ring.is_geo_expandable(new_pos, true);
 
@@ -2346,7 +2345,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
         }
 
 
-        std::cout<<" ----------------------------------------------"<<std::endl;
+        SS_DEBUG(" ----------------------------------------------"<<std::endl);
         return new_pos;
 
     }else{
@@ -2358,44 +2357,44 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
             auto target_face_vertices = target_vertices;
             target_face_vertices.push_back(vertex_to_contract);
 
-            //std::cout<<" - contracted to edge "<<target_face_vertices<<std::endl;
+            //SS_DEBUG(" - contracted to edge "<<target_face_vertices<<std::endl);
 
             return get_position_from_vertices(target_face_vertices);
 
 
-            //std::cout<<" WARNING - using new version for contraction with two target vertices"<<std::endl;
+            //SS_DEBUG(" WARNING - using new version for contraction with two target vertices"<<std::endl);
 
             auto tip_v(from_vertex_handle(base_vertex_to_spoke_edge_prop_[witness_vertex_]));
             std::vector<std::vector<VertexHandle>> halffaces;
 
 
             auto target_vertex = target_vertices[0] == tip_v ? target_vertices[1] : target_vertices[0];
-            std::cout<<" - contracting to edge "<<target_vertices<<std::endl;
-            std::cout<<" - target vertex is "<<target_vertex<<std::endl;
+            SS_DEBUG(" - contracting to edge "<<target_vertices<<std::endl);
+            SS_DEBUG(" - target vertex is "<<target_vertex<<std::endl);
             /*for(auto vc_it = vc_iter(vertex_to_contract); vc_it.valid(); vc_it++){
                 if(TopoHelper::cell_contains_vertex(*this, target_vertex, *vc_it)){
-                    std::cout<<" -- found target cell "<<
+                    SS_DEBUG(" -- found target cell "<<
                 }
             }*/
 
-            auto mid_hf1 = halfface({target_vertex, vertex_to_contract, tip_v});
+            auto mid_hf1 = find_halfface({target_vertex, vertex_to_contract, tip_v});
             auto op_vertex1 = halfface_opposite_vertex(mid_hf1);
             halffaces.push_back({target_vertex, op_vertex1, tip_v});
-            std::cout<<" - added side face "<<halffaces.back()<<" to constraints"<<std::endl;
+            SS_DEBUG(" - added side face "<<halffaces.back()<<" to constraints"<<std::endl);
             halffaces.push_back({op_vertex1, vertex_to_contract, tip_v});
-            std::cout<<" - added side face "<<halffaces.back()<<" to constraints"<<std::endl;
+            SS_DEBUG(" - added side face "<<halffaces.back()<<" to constraints"<<std::endl);
             halffaces.push_back({op_vertex1, target_vertex, vertex_to_contract});
-            std::cout<<" - added top face "<<halffaces.back()<<" to constraints"<<std::endl;
+            SS_DEBUG(" - added top face "<<halffaces.back()<<" to constraints"<<std::endl);
 
 
             auto mid_hf2 = opposite_halfface_handle(mid_hf1);
             auto op_vertex2 = halfface_opposite_vertex(mid_hf2);
             halffaces.push_back({op_vertex2, target_vertex, tip_v});
-            std::cout<<" - added side face "<<halffaces.back()<<" to constraints"<<std::endl;
+            SS_DEBUG(" - added side face "<<halffaces.back()<<" to constraints"<<std::endl);
             halffaces.push_back({vertex_to_contract, op_vertex2, tip_v});
-            std::cout<<" - added side face "<<halffaces.back()<<" to constraints"<<std::endl;
+            SS_DEBUG(" - added side face "<<halffaces.back()<<" to constraints"<<std::endl);
             halffaces.push_back({op_vertex2, vertex_to_contract, target_vertex});
-            std::cout<<" - added top face "<<halffaces.back()<<" to constraints"<<std::endl;
+            SS_DEBUG(" - added top face "<<halffaces.back()<<" to constraints"<<std::endl);
 
             auto v = vertex(vertex_to_contract);
 
@@ -2407,7 +2406,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
                 }
 
                 if(!secondary_vertex_prop_[neighbor].is_valid()){
-                    //std::cout<<" -- neighbor vertex "<<neighbor<<" has a secondary, skipping"<<std::endl;
+                    //SS_DEBUG(" -- neighbor vertex "<<neighbor<<" has a secondary, skipping"<<std::endl);
                     //continue;
                 }
 
@@ -2426,13 +2425,13 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
                 //if(pv.dot(normal) < 0){
                 if(side == CGAL::NEGATIVE){
                     halffaces.push_back({neighbor, witness_vertex_, tip_v});
-                    std::cout<<" -- added face "<<halffaces.back()<<std::endl;
+                    SS_DEBUG(" -- added face "<<halffaces.back()<<std::endl);
                     //}else if(pv.dot(normal) > 0){
                 }else if(side == CGAL::POSITIVE){
                     halffaces.push_back({neighbor, tip_v, witness_vertex_});
-                    std::cout<<" -- added face "<<halffaces.back()<<std::endl;
+                    SS_DEBUG(" -- added face "<<halffaces.back()<<std::endl);
                 }else{
-                    std::cout<<" --> vertex to contract "<<vertex_to_contract<<" is on the plane spanned by vertex "<<neighbor<<", skipping"<<std::endl;
+                    SS_DEBUG(" --> vertex to contract "<<vertex_to_contract<<" is on the plane spanned by vertex "<<neighbor<<", skipping"<<std::endl);
                 }
             }
 
@@ -2443,7 +2442,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
                                                                    new_pos);
 
             if(cheb_result){
-                std::cout<<" ERROR - couldn't find contraction Chebyshev center, details:"<<std::endl;
+                SS_DEBUG(" ERROR - couldn't find contraction Chebyshev center, details:"<<std::endl);
                 find_chebyshev_center_from_halffaces(halffaces,
                                                      new_pos,
                                                      true);
@@ -2451,7 +2450,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
                 return {0,0,0};
             }
 
-            std::cout<<" ----------------------------------------------"<<std::endl;
+            SS_DEBUG(" ----------------------------------------------"<<std::endl);
             return new_pos;
 
         }else if(target_vertices.size() == 3){
@@ -2467,19 +2466,19 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
                     OVMvec3ToCGALPoint3(vertex(target_vertices[1])),
                     OVMvec3ToCGALPoint3(vertex(target_vertices[2])));
 
-            //std::cout<<" wtv = "<<witness_vertex_<<", "<<tip_v<<", "<<vertex_to_contract<<std::endl;
-            //std::cout<<" abc = "<<target_vertices<<std::endl;
+            //SS_DEBUG(" wtv = "<<witness_vertex_<<", "<<tip_v<<", "<<vertex_to_contract<<std::endl);
+            //SS_DEBUG(" abc = "<<target_vertices<<std::endl);
 
             auto inter = CGAL::intersection(wtv, target_tri);
 
             if(!inter){
-                std::cout<<" ERROR - no intersection between w-t-v triangle and target face"<<std::endl;
-                std::cout<<" - w-t-v: "<<wtv<<std::endl;
-                std::cout<<" --- = "<<vec2vec(vertex(witness_vertex_))<<", "<<vec2vec(vertex(tip_v))<<", "<<vec2vec(vertex(vertex_to_contract))<<std::endl;
-                std::cout<<" - target face: "<<target_vertices<<std::endl;
-                std::cout<<" --- = "<<vec2vec(vertex(target_vertices[0]))
+                SS_DEBUG(" ERROR - no intersection between w-t-v triangle and target face"<<std::endl);
+                SS_DEBUG(" - w-t-v: "<<wtv<<std::endl);
+                SS_DEBUG(" --- = "<<vec2vec(vertex(witness_vertex_))<<", "<<vec2vec(vertex(tip_v))<<", "<<vec2vec(vertex(vertex_to_contract))<<std::endl);
+                SS_DEBUG(" - target face: "<<target_vertices<<std::endl);
+                SS_DEBUG(" --- = "<<vec2vec(vertex(target_vertices[0]))
                         <<", "<<vec2vec(vertex(target_vertices[1]))
-                        <<", "<<vec2vec(vertex(target_vertices[2]))<<std::endl;
+                        <<", "<<vec2vec(vertex(target_vertices[2]))<<std::endl);
                 return {0,0,0};
             }
 
@@ -2487,7 +2486,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
             CGAL_Segment_3* segment_result = boost::get<CGAL_Segment_3>(&*inter);
 
             if(!segment_result){
-                std::cout<<" ERROR - intersection between w-t-v triangle and target face "<<target_vertices<<" is not a segment "<<std::endl;
+                SS_DEBUG(" ERROR - intersection between w-t-v triangle and target face "<<target_vertices<<" is not a segment "<<std::endl);
                 return {0,0,0};
             }
 
@@ -2496,7 +2495,7 @@ VertexPosition StarShapifyableExpansionCone::get_contraction_position_from_verti
                     OVMvec3ToCGALPoint3(segment_result->point(1)))/2)/2;
 
         }else{
-            std::cout<<" ERROR - "<<target_vertices.size()<<" target vertices, so neither a face nor an edge"<<std::endl;
+            SS_DEBUG(" ERROR - "<<target_vertices.size()<<" target vertices, so neither a face nor an edge"<<std::endl);
             return {0,0,0};
         }
     }
@@ -2517,16 +2516,16 @@ void StarShapifyableExpansionCone::translate_to_have_tips_at_origin(){
 
 void StarShapifyableExpansionCone::find_unvisible_vertices_from(const VertexHandle& witness_vertex,
                                                                 std::vector<VertexHandle>& unvisible_vertices) const{
-    std::cout<<" - not visible: ";
+    SS_DEBUG(" - not visible: ");
     for(auto to_vertex: vertices()){
         if(to_vertex != witness_vertex){
             if(!is_visible_from(witness_vertex, to_vertex)){
-                std::cout<<" "<<to_vertex;
+                SS_DEBUG(" "<<to_vertex);
                 unvisible_vertices.push_back(to_vertex);
             }
         }
     }
-    std::cout<<std::endl;
+    SS_DEBUG(std::endl);
 }
 
 
@@ -2558,14 +2557,14 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
         int max, total;
         float avg;
         one_ring_neighborhood_byte_size(new_mid_vertex, max, avg, total);
-        std::cout<<" ......................................................................"<<std::endl;
-        std::cout<<" --- checking integrity for vertex "<<new_mid_vertex<<std::endl;
-        std::cout<<" --- 1-ring max byte size = "<<max<<std::endl;
-        std::cout<<" --- 1-ring avg byte size = "<<avg<<std::endl;
-        std::cout<<" --- 1-ring total byte size = "<<total<<std::endl;
-        std::cout<<" --- #target vertices = "<<target_vertices.size()<<std::endl;
-        std::cout<<" --- #vertices to contract = "<<vertices_to_contract_.size()<<std::endl;
-        std::cout<<" --- vertex valence = "<<valence(new_mid_vertex)<<std::endl;
+        SS_DEBUG(" ......................................................................"<<std::endl);
+        SS_DEBUG(" --- checking integrity for vertex "<<new_mid_vertex<<std::endl);
+        SS_DEBUG(" --- 1-ring max byte size = "<<max<<std::endl);
+        SS_DEBUG(" --- 1-ring avg byte size = "<<avg<<std::endl);
+        SS_DEBUG(" --- 1-ring total byte size = "<<total<<std::endl);
+        SS_DEBUG(" --- #target vertices = "<<target_vertices.size()<<std::endl);
+        SS_DEBUG(" --- #vertices to contract = "<<vertices_to_contract_.size()<<std::endl);
+        SS_DEBUG(" --- vertex valence = "<<valence(new_mid_vertex)<<std::endl);
     }
 
 
@@ -2575,18 +2574,18 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
     //if(ExactBadTetFinder::meshContainsFlippedTets(*this, vertex_position_prop_)){
 
         if(print_debug){
-            std::cout<<" -> mesh contains flipped tets"<<std::endl;
+            SS_DEBUG(" -> mesh contains flipped tets"<<std::endl);
             for(auto c: ExactBadTetFinder::findBadTets(*this, vertex_position_prop_).second){
-                std::cout<<" - "<<c<<": "<<get_cell_vertices(c)<<std::endl;
+                SS_DEBUG(" - "<<c<<": "<<get_cell_vertices(c)<<std::endl);
             }
-            std::cout<<" ......................................................................"<<std::endl;
+            SS_DEBUG(" ......................................................................"<<std::endl);
         }
         return false;
     }
     if(print_debug){
         auto flipped_check_end = std::chrono::high_resolution_clock::now();
         float flipped_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(flipped_check_end - flipped_check_start).count() / 1000000;
-        std::cout<<" --- flipped check duration: "<<flipped_check_duration_s<<std::endl;
+        SS_DEBUG(" --- flipped check duration: "<<flipped_check_duration_s<<std::endl);
     }
 
     auto deg_check_start = std::chrono::high_resolution_clock::now();
@@ -2594,8 +2593,8 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
         auto is_deg = OVMtetToCGALtet(*this, vertex_position_prop_, *vc_it).is_degenerate();
         if(degenerate_tet_prop[*vc_it] != is_deg){
             if(print_debug){
-                std::cout<<" -> tet "<<get_cell_vertices(*vc_it)<<" initial deg: "<<degenerate_tet_prop[*vc_it]<<" and now: "<<is_deg<<std::endl;
-                std::cout<<" ......................................................................"<<std::endl;
+                SS_DEBUG(" -> tet "<<get_cell_vertices(*vc_it)<<" initial deg: "<<degenerate_tet_prop[*vc_it]<<" and now: "<<is_deg<<std::endl);
+                SS_DEBUG(" ......................................................................"<<std::endl);
             }
             return false;
         }
@@ -2603,12 +2602,12 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
     if(print_debug){
         auto deg_check_end = std::chrono::high_resolution_clock::now();
         float deg_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(deg_check_end - deg_check_start).count() / 1000000;
-        std::cout<<" --- deg check duration: "<<deg_check_duration_s<<std::endl;
+        SS_DEBUG(" --- deg check duration: "<<deg_check_duration_s<<std::endl);
     }
 
     auto tip_v = *cone_tip_vertices().begin();//from_vertex_handle(base_vertex_to_spoke_edge_prop_[new_mid_vertex]);
     if(print_debug){
-        //std::cout<<" tip vertex = "<<tip_v<<std::endl;
+        //SS_DEBUG(" tip vertex = "<<tip_v<<std::endl);
     }
 
 
@@ -2625,23 +2624,23 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
     if(geo_exp_result){
 
         if(print_debug){
-            std::cout<<" -> EC is no longer star-shaped"<<std::endl;
-            std::cout<<" ......................................................................"<<std::endl;
+            SS_DEBUG(" -> EC is no longer star-shaped"<<std::endl);
+            SS_DEBUG(" ......................................................................"<<std::endl);
         }
         //updated_cone.print_details();
-        //std::cout<<" -> no longer star-shaped"<<std::endl;
+        //SS_DEBUG(" -> no longer star-shaped"<<std::endl);
         return false;
     }
     if(print_debug){
         auto star_shape_check_end = std::chrono::high_resolution_clock::now();
         float star_shape_check_end_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(star_shape_check_end - star_shape_check_start).count() / 1000000;
-        std::cout<<" --- star-shape check duration: "<<star_shape_check_end_duration_s<<std::endl;
+        SS_DEBUG(" --- star-shape check duration: "<<star_shape_check_end_duration_s<<std::endl);
     }
     */
 
     auto v = vertex(new_mid_vertex);
 
-    //std::cout<<" - v = "<<v<<std::endl;
+    //SS_DEBUG(" - v = "<<v<<std::endl);
     //then add the constraints from the vertices that were collapsed to this one
     //for(auto out_he: outgoing_halfedges(new_mid_vertex)){
     // auto vh = to_vertex_handle(out_he);
@@ -2652,13 +2651,13 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
         }
 
         if(secondary_vertex_prop_[vh].is_valid()){
-            //std::cout<<" -- vertex "<<vh<<" has a secondary, skipping"<<std::endl;
+            //SS_DEBUG(" -- vertex "<<vh<<" has a secondary, skipping"<<std::endl);
             continue;
         }
 
-        //std::cout<<" -- vertex "<<vh<<" initial side: "<<neighbors_side_prop[vh]<<std::endl;
+        //SS_DEBUG(" -- vertex "<<vh<<" initial side: "<<neighbors_side_prop[vh]<<std::endl);
         if(!neighbors_side_prop[vh]){
-            //std::cout<<" -- neighbor "<<vh<<" was aligned, skipping"<<std::endl;
+            //SS_DEBUG(" -- neighbor "<<vh<<" was aligned, skipping"<<std::endl);
             continue;
         }
 
@@ -2676,17 +2675,17 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
                                       OVMvec3ToCGALPoint3(vertex(tip_v)),
                                       OVMvec3ToCGALPoint3(v));
 
-        //std::cout<<" -- side for base vertex "<<vh<<": "<<side<<std::endl;
+        //SS_DEBUG(" -- side for base vertex "<<vh<<": "<<side<<std::endl);
 
         if(print_debug){
-            //std::cout<<" -- side of vertex "<<vh<<": "<<side<<std::endl;
+            //SS_DEBUG(" -- side of vertex "<<vh<<": "<<side<<std::endl);
         }
-        //std::cout<<"  -- "<<vh<<" normal = "<<normal<<", centroid = "<<centroid<<", dot = "<<dot<<", side: "<<side<<std::endl;
+        //SS_DEBUG("  -- "<<vh<<" normal = "<<normal<<", centroid = "<<centroid<<", dot = "<<dot<<", side: "<<side<<std::endl);
         if(side != neighbors_side_prop[vh]){
 
             if(print_debug){
-                std::cout<<" --> vertex "<<new_mid_vertex<<" is not on the same side of vertex "<<vh<<" anymore"<<std::endl;
-                std::cout<<" ......................................................................"<<std::endl;
+                SS_DEBUG(" --> vertex "<<new_mid_vertex<<" is not on the same side of vertex "<<vh<<" anymore"<<std::endl);
+                SS_DEBUG(" ......................................................................"<<std::endl);
             }
             return false;
         }
@@ -2694,7 +2693,7 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
     if(print_debug){
         auto sides_check_end = std::chrono::high_resolution_clock::now();
         float sides_check_end_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(sides_check_end - sides_check_start).count() / 1000000;
-        std::cout<<" --- sides check duration: "<<sides_check_end_duration_s<<std::endl;
+        SS_DEBUG(" --- sides check duration: "<<sides_check_end_duration_s<<std::endl);
     }
 
     auto target_sides_check_start = std::chrono::high_resolution_clock::now();
@@ -2715,11 +2714,11 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
                                       OVMvec3ToCGALPoint3(vertex(tip_v)),
                                       OVMvec3ToCGALPoint3(v));
 
-        //std::cout<<" -- side for base target vertex "<<vh<<": "<<side<<std::endl;
+        //SS_DEBUG(" -- side for base target vertex "<<vh<<": "<<side<<std::endl);
         if(side != neighbors_side_prop[vh]){
             if(print_debug){
-                std::cout<<" --> target vertex "<<new_mid_vertex<<" is not on the same side of vertex "<<vh<<" anymore"<<std::endl;
-                std::cout<<" ......................................................................"<<std::endl;
+                SS_DEBUG(" --> target vertex "<<new_mid_vertex<<" is not on the same side of vertex "<<vh<<" anymore"<<std::endl);
+                SS_DEBUG(" ......................................................................"<<std::endl);
             }
             return false;
         }
@@ -2727,7 +2726,7 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
     if(print_debug){
         auto target_sides_check_end = std::chrono::high_resolution_clock::now();
         float target_sides_check_end_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(target_sides_check_end - target_sides_check_start).count() / 1000000;
-        std::cout<<" --- target sides check duration: "<<target_sides_check_end_duration_s<<std::endl;
+        SS_DEBUG(" --- target sides check duration: "<<target_sides_check_end_duration_s<<std::endl);
     }
 
 
@@ -2740,12 +2739,12 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
         if(side != constr.second){
 
             if(print_debug){
-                std::cout<<" --> switched side from "<<constr.second<<" to "<<side<<" for additional constraint n°"<<i<<std::endl;
-                std::cout<<" ......................................................................"<<std::endl;
+                SS_DEBUG(" --> switched side from "<<constr.second<<" to "<<side<<" for additional constraint n°"<<i<<std::endl);
+                SS_DEBUG(" ......................................................................"<<std::endl);
             }
-            /*std::cout<<"     points used: "<<std::endl;
+            /*SS_DEBUG("     points used: "<<std::endl);
             for(const auto& p: constr.first){
-                std::cout<<"     - "<<p<<std::endl;
+                SS_DEBUG("     - "<<p<<std::endl);
             }
             std::string ans;
             std::cin>>ans;*/
@@ -2757,12 +2756,12 @@ bool StarShapifyableExpansionCone::is_integrity_maintained(const VertexHandle& n
     if(print_debug){
         auto additional_sides_check_end = std::chrono::high_resolution_clock::now();
         float additional_sides_check_end_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(additional_sides_check_end - additional_sides_check_start).count() / 1000000;
-        std::cout<<" --- additional sides check duration: "<<additional_sides_check_end_duration_s<<std::endl;
+        SS_DEBUG(" --- additional sides check duration: "<<additional_sides_check_end_duration_s<<std::endl);
     }
 
     if(print_debug){
-        std::cout<<" --> integrity maintained"<<std::endl;
-        std::cout<<" ......................................................................"<<std::endl;
+        SS_DEBUG(" --> integrity maintained"<<std::endl);
+        SS_DEBUG(" ......................................................................"<<std::endl);
     }
     return true;
 }
@@ -2796,8 +2795,8 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
     SS_DEBUG("  looking for minimum precision position for new mid-vertex "<<new_mid_vertex<<" initially at "<<std::setprecision(20)<<vec2vec(vertex(new_mid_vertex))<<" with binary search...");
 
 #if ENABLE_TIMINGS
-    std::cout<<" ======================================================="<<std::endl;
-    std::cout<<"  looking for minimum precision position for new mid-vertex "<<new_mid_vertex<<" initially at "<<vec2vec(vertex(new_mid_vertex))<<" with binary search..."<<std::endl;
+    SS_DEBUG(" ======================================================="<<std::endl);
+    SS_DEBUG("  looking for minimum precision position for new mid-vertex "<<new_mid_vertex<<" initially at "<<vec2vec(vertex(new_mid_vertex))<<" with binary search..."<<std::endl);
 #endif
 
     const int byte_size_lower_bound(400);
@@ -2811,8 +2810,8 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
     if(initial_byte_size < byte_size_lower_bound){
 
 #if ENABLE_TIMINGS
-        std::cout<<" --> initial precision lower than "<<byte_size_lower_bound<<", using that"<<std::endl;
-        std::cout<<" ======================================================="<<std::endl;
+        SS_DEBUG(" --> initial precision lower than "<<byte_size_lower_bound<<", using that"<<std::endl);
+        SS_DEBUG(" ======================================================="<<std::endl);
 #endif
 
         SS_DEBUG(" --> initial precision enough lower than "<<byte_size_lower_bound<<", using that");
@@ -2822,8 +2821,8 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
 
     auto setup_start = std::chrono::high_resolution_clock::now();
 
-    //std::cout<<" - initial mid-vertex position = "<<new_vertex_initial_position<<std::endl;
-    //std::cout<<" - initial sides: "<<std::endl;
+    //SS_DEBUG(" - initial mid-vertex position = "<<new_vertex_initial_position<<std::endl);
+    //SS_DEBUG(" - initial sides: "<<std::endl);
     //auto neighbors_side_prop = request_vertex_property<int>();
     auto exact_neighbors_side_prop = request_vertex_property<CGAL::Orientation>();
 
@@ -2839,22 +2838,22 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
         }
 
         if(secondary_vertex_prop_[vh].is_valid()){
-            //std::cout<<" -- vertex "<<vh<<" has a secondary, skipping"<<std::endl;
+            //SS_DEBUG(" -- vertex "<<vh<<" has a secondary, skipping"<<std::endl);
             continue;
         }
 
         exact_neighbors_side_prop[vh] = CGAL::orientation(OVMvec3ToCGALPoint3(vertex(vh)), w, t, v);
 
-        //std::cout<<" -- side for base vertex "<<vh<<": "<<exact_neighbors_side_prop[vh]<<std::endl;
+        //SS_DEBUG(" -- side for base vertex "<<vh<<": "<<exact_neighbors_side_prop[vh]<<std::endl);
     }
 
-    //std::cout<<" - target vertices: "<<target_vertices<<std::endl;
+    //SS_DEBUG(" - target vertices: "<<target_vertices<<std::endl);
     int target_side_sum(0);
     for(auto vh: target_vertices){
         if(!is_cone_tip(vh)){
 
             exact_neighbors_side_prop[vh] = CGAL::orientation(OVMvec3ToCGALPoint3(vertex(vh)), w, t, v);
-            //std::cout<<" -- side for base target vertex "<<vh<<": "<<exact_neighbors_side_prop[vh]<<std::endl;
+            //SS_DEBUG(" -- side for base target vertex "<<vh<<": "<<exact_neighbors_side_prop[vh]<<std::endl);
 
         }else{
             //by convention, for next check
@@ -2866,10 +2865,10 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
     }
 
     if(target_vertices.size() == 3 && target_side_sum){
-        std::cout<<" ERROR - target sides sum is not zero. Sides:"<<std::endl;
+        SS_DEBUG(" ERROR - target sides sum is not zero. Sides:"<<std::endl);
         for(auto target:target_vertices){
-            //std::cout<<" - "<<target<<" :" <<neighbors_side_prop[target]<<std::endl;
-            std::cout<<" - "<<target<<" :" <<exact_neighbors_side_prop[target]<<std::endl;
+            //SS_DEBUG(" - "<<target<<" :" <<neighbors_side_prop[target]<<std::endl);
+            SS_DEBUG(" - "<<target<<" :" <<exact_neighbors_side_prop[target]<<std::endl);
 
         }
         return {0,0,0};
@@ -2898,14 +2897,14 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
             auto side = CGAL::orientation(s, target, t, v);
 
             if(!side){
-                //std::cout<<" --- skipping additional constraint "<<(*vv_it)<<" - "<<target_v<<" with side = "<<side<<std::endl;
+                //SS_DEBUG(" --- skipping additional constraint "<<(*vv_it)<<" - "<<target_v<<" with side = "<<side<<std::endl);
                 continue;
             }
             additional_constraints.push_back({{s, target, t}, side});
-            //std::cout<<" --- added additional constraint n°"<<i<<": "<<(*vv_it)<<" - "<<target_v<<" with side = "<<side<<std::endl;
-            /*std::cout<<"     points used: "<<std::endl;
+            //SS_DEBUG(" --- added additional constraint n°"<<i<<": "<<(*vv_it)<<" - "<<target_v<<" with side = "<<side<<std::endl);
+            /*SS_DEBUG("     points used: "<<std::endl);
             for(const auto& p: additional_constraints.back().first){
-                std::cout<<"     - "<<p<<std::endl;
+                SS_DEBUG("     - "<<p<<std::endl);
             }*/
             i++;
         }
@@ -2916,14 +2915,14 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
 #if ENABLE_TIMINGS
     auto setup_end = std::chrono::high_resolution_clock::now();
     float setup_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(setup_end - setup_start).count() / 1000000;
-    std::cout<<" -- set-up duration: "<<setup_duration_s<<std::endl;
+    SS_DEBUG(" -- set-up duration: "<<setup_duration_s<<std::endl);
     auto first_integrity_check_start = std::chrono::high_resolution_clock::now();
 #endif
 
 
     if(!is_integrity_maintained(new_mid_vertex, exact_neighbors_side_prop, target_vertices, degenerate_tet_prop, additional_constraints, ENABLE_TIMINGS)){
-        std::cout<<" ERROR - integrity already not maintained with initial position "<<vec2vec(new_vertex_initial_position)<<" for vertex "<<new_mid_vertex<<std::endl;
-        std::cout<<" - list of remaining vertices to contract: "<<vertices_to_contract_<<std::endl;
+        SS_DEBUG(" ERROR - integrity already not maintained with initial position "<<vec2vec(new_vertex_initial_position)<<" for vertex "<<new_mid_vertex<<std::endl);
+        SS_DEBUG(" - list of remaining vertices to contract: "<<vertices_to_contract_<<std::endl);
         is_integrity_maintained(new_mid_vertex, exact_neighbors_side_prop, target_vertices, degenerate_tet_prop, additional_constraints, true);
 
         //found_deg_tets_ = true;
@@ -2934,10 +2933,10 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
 #if ENABLE_TIMINGS
     auto first_integrity_check_end = std::chrono::high_resolution_clock::now();
     float first_integrity_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(first_integrity_check_end - first_integrity_check_start).count() / 1000000;
-    std::cout<<" -- initial position integrity check duration: "<<first_integrity_check_duration_s<<std::endl;
+    SS_DEBUG(" -- initial position integrity check duration: "<<first_integrity_check_duration_s<<std::endl);
 #endif
 
-    //std::cout<<" WARNING - precision reduction diabled"<<std::endl;
+    //SS_DEBUG(" WARNING - precision reduction diabled"<<std::endl);
     //return new_vertex_initial_position;
 
 
@@ -2950,8 +2949,8 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
     if(is_integrity_maintained(new_mid_vertex, exact_neighbors_side_prop, target_vertices, degenerate_tet_prop, additional_constraints, ENABLE_TIMINGS)){
 
 #if ENABLE_TIMINGS
-        std::cout<<" --> double precision enough, using that"<<std::endl;
-        std::cout<<" ======================================================="<<std::endl;
+        SS_DEBUG(" --> double precision enough, using that"<<std::endl);
+        SS_DEBUG(" ======================================================="<<std::endl);
 #endif
         SS_DEBUG(" --> double precision enough, using that");
         SS_DEBUG(" =======================================================");
@@ -2961,12 +2960,12 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
 #if ENABLE_TIMINGS
     auto double_integrity_check_end = std::chrono::high_resolution_clock::now();
     float double_integrity_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(double_integrity_check_end - double_integrity_check_start).count() / 1000000;
-    std::cout<<" -- double integrity check duration: "<<double_integrity_check_duration_s<<std::endl;
+    SS_DEBUG(" -- double integrity check duration: "<<double_integrity_check_duration_s<<std::endl);
 #endif
 
     current_pos = new_vertex_initial_position;
 
-    //std::cout<<" - initial byte size = "<<initial_byte_size<<std::endl;
+    //SS_DEBUG(" - initial byte size = "<<initial_byte_size<<std::endl);
 
 
     int max_shift_factor = PEHelpers::find_maximum_shift_factor(new_vertex_initial_position);
@@ -2986,11 +2985,11 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
         int current_byte_size = byte_size(current_pos);
 
 #if ENABLE_TIMINGS
-        std::cout<<" ------ "<<std::endl;
-        std::cout<<" ---- byte size at iteration "<<i<<"/"<<max_iterations<<" : "<<byte_size(current_pos)<<std::endl;
-        std::cout<<"          min shift factor = "<<min_shift_factor<<std::endl;
-        std::cout<<"          max shift factor = "<<max_shift_factor<<std::endl;
-        std::cout<<"              shift factor = "<<shift_factor<<std::endl;
+        SS_DEBUG(" ------ "<<std::endl);
+        SS_DEBUG(" ---- byte size at iteration "<<i<<"/"<<max_iterations<<" : "<<byte_size(current_pos)<<std::endl);
+        SS_DEBUG("          min shift factor = "<<min_shift_factor<<std::endl);
+        SS_DEBUG("          max shift factor = "<<max_shift_factor<<std::endl);
+        SS_DEBUG("              shift factor = "<<shift_factor<<std::endl);
 #endif
 
         this->set_vertex(new_mid_vertex, current_pos, false);
@@ -3007,12 +3006,12 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
 #if ENABLE_TIMINGS
         auto integrity_check_end = std::chrono::high_resolution_clock::now();
         float integrity_check_duration_s = (float)std::chrono::duration_cast<std::chrono::microseconds>(integrity_check_end - integrity_check_start).count() / 1000000;
-        std::cout<<" -- "<<(i+1)<<"-th integrity check duration: "<<integrity_check_duration_s<<std::endl;
+        SS_DEBUG(" -- "<<(i+1)<<"-th integrity check duration: "<<integrity_check_duration_s<<std::endl);
 #endif
 
         if((shift_factor <= min_shift_factor && current_byte_size < byte_size_lower_bound) ||
                 std::abs(current_byte_size - last_byte_size) < min_byte_size_diff){
-            //std::cout<<" --> ok"<<std::endl;
+            //SS_DEBUG(" --> ok"<<std::endl);
             found_best_factor = true;
         }
 
@@ -3020,21 +3019,21 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
         last_shift_factor = shift_factor;
         shift_factor = (min_shift_factor + max_shift_factor) / 2;
         if(std::abs(last_shift_factor - shift_factor) < min_shift_factor_diff){
-            //std::cout<<" --> shift factor change < "<<min_shift_factor_diff<<" -> ok"<<std::endl;
+            //SS_DEBUG(" --> shift factor change < "<<min_shift_factor_diff<<" -> ok"<<std::endl);
             found_best_factor = true;
         }
-        //std::cout<<" - updated shift factor = "<<shift_factor<<std::endl;
+        //SS_DEBUG(" - updated shift factor = "<<shift_factor<<std::endl);
 
         i++;
     }
 
-    //std::cout<<" final min shift factor = "<<min_shift_factor<<std::endl;
+    //SS_DEBUG(" final min shift factor = "<<min_shift_factor<<std::endl);
 
     //re-compute best valid position
     current_pos = new_vertex_initial_position;
     PEHelpers::lower_precision(min_shift_factor, current_pos);
 
-    //std::cout<<" final byte size = "<<byte_size(current_pos)<<std::endl;
+    //SS_DEBUG(" final byte size = "<<byte_size(current_pos)<<std::endl);
 
     this->set_vertex(new_mid_vertex, initial_pos);
 
@@ -3043,14 +3042,14 @@ VertexPosition StarShapifyableExpansionCone::binary_search_min_precision_positio
     SS_DEBUG(" =======================================================");
 
     /*if(byte_size(current_pos) < initial_byte_size){
-        std::cout<<" --> actually reduced here"<<std::endl;
+        SS_DEBUG(" --> actually reduced here"<<std::endl);
         std::string ans;
         std::cin>>ans;
     }*/
 
 #if ENABLE_TIMINGS
-    std::cout<<" ...done, reduced precision from "<<initial_byte_size<<" bytes to "<<byte_size(current_pos)<<" after "<<i<<" iterations"<<std::endl;
-    std::cout<<" ======================================================="<<std::endl;
+    SS_DEBUG(" ...done, reduced precision from "<<initial_byte_size<<" bytes to "<<byte_size(current_pos)<<" after "<<i<<" iterations"<<std::endl);
+    SS_DEBUG(" ======================================================="<<std::endl);
 #endif
     //std::string ans;
     //std::cin>>ans;
@@ -3071,7 +3070,7 @@ VertexHandle StarShapifyableExpansionCone::split_spoke_and_move_vertex(const Ver
     //SS_DEBUG(" splitting spoke of base vertex "<<cone_v<<" to position "<<vec2vec(new_position)<<"...");
 
     if(new_position == VertexPosition(0,0,0)){
-        std::cout<<" ERROR - trying to move spoke mid-vertex to origin. This should never happen"<<std::endl;
+        SS_DEBUG(" ERROR - trying to move spoke mid-vertex to origin. This should never happen"<<std::endl);
         return VertexHandle(-1);
     }
 
@@ -3082,18 +3081,18 @@ VertexHandle StarShapifyableExpansionCone::split_spoke_and_move_vertex(const Ver
     //then, split the spoke (both on cone and mesh)
     const auto cone_tip       = from_vertex_handle(cone_spoke_heh);
     const auto cone_v_prime   = split_edge(cone_spoke_heh);
-    base_vertex_to_spoke_edge_prop_[cone_v_prime] = halfedge(cone_tip, cone_v_prime);
+    base_vertex_to_spoke_edge_prop_[cone_v_prime] = find_halfedge(cone_tip, cone_v_prime);
     collapsed_prop_[cone_v] = true;
     secondary_vertex_prop_[cone_v] = cone_v_prime;
 
     original_base_vertex_prop_[cone_v_prime] = original_base_vertex_prop_[to_vertex_handle(cone_spoke_heh)];
-    //std::cout<<" - set original base vertex of mid-vertex "<<cone_v_prime<<" as "<<original_base_vertex_prop_[cone_v_prime]<<std::endl;
+    //SS_DEBUG(" - set original base vertex of mid-vertex "<<cone_v_prime<<" as "<<original_base_vertex_prop_[cone_v_prime]<<std::endl);
     mid_vertices_positions_prop_[original_base_vertex_prop_[cone_v_prime]].push_back(new_position);
     mid_vertices_prop_[original_base_vertex_prop_[cone_v_prime]].push_back(cone_v_prime);
-    //std::cout<<" - and added mid-vertex position "<<vec2vec(min_prec_new_pos)<<" to list of mid-vertices positions for base vertex "<<original_base_vertex_prop_[cone_v_prime]<<std::endl;
-    //std::cout<<" - mid-vertices for base vertex "<<original_base_vertex_prop_[cone_v_prime]<<": "<<mid_vertices_prop_[original_base_vertex_prop_[cone_v_prime]]<<std::endl;
+    //SS_DEBUG(" - and added mid-vertex position "<<vec2vec(min_prec_new_pos)<<" to list of mid-vertices positions for base vertex "<<original_base_vertex_prop_[cone_v_prime]<<std::endl);
+    //SS_DEBUG(" - mid-vertices for base vertex "<<original_base_vertex_prop_[cone_v_prime]<<": "<<mid_vertices_prop_[original_base_vertex_prop_[cone_v_prime]]<<std::endl);
 
-    //std::cout<<" - split edge "<<halfedge(cone_spoke_heh)<<" -> "<<cone_v_prime<<std::endl;
+    //SS_DEBUG(" - split edge "<<halfedge(cone_spoke_heh)<<" -> "<<cone_v_prime<<std::endl);
 
     set_vertex(cone_v_prime, new_position);
 
@@ -3102,8 +3101,8 @@ VertexHandle StarShapifyableExpansionCone::split_spoke_and_move_vertex(const Ver
             !is_boundary(cone_v_prime)){
         auto min_prec_new_pos = binary_search_min_precision_position(cone_v_prime, target_vertices);
         if(min_prec_new_pos == VertexPosition(0,0,0)){
-            std::cout<<" ERROR - min-precision position is the origin. This should never happen"<<std::endl;
-            std::cout<<" failed to split spoke for vertex "<<cone_v<<" with target vertices "<<target_vertices<<std::endl;
+            SS_DEBUG(" ERROR - min-precision position is the origin. This should never happen"<<std::endl);
+            SS_DEBUG(" failed to split spoke for vertex "<<cone_v<<" with target vertices "<<target_vertices<<std::endl);
             return VertexHandle(-1);
         }
         set_vertex(cone_v_prime, min_prec_new_pos);
@@ -3114,7 +3113,7 @@ VertexHandle StarShapifyableExpansionCone::split_spoke_and_move_vertex(const Ver
         SS_DEBUG("     --            macro: "<<ENABLE_PRECISION_REDUCTION);
         SS_DEBUG("     -- reduce precision: "<<reduce_precision);
         SS_DEBUG("     --         boundary: "<<is_boundary(cone_v_prime));
-        //std::cout<<" - skipping precision reduction (boundary: "<<is_boundary(cone_v_prime)<<")"<<std::endl;
+        //SS_DEBUG(" - skipping precision reduction (boundary: "<<is_boundary(cone_v_prime)<<")"<<std::endl);
     }
 
 
@@ -3126,7 +3125,7 @@ VertexHandle StarShapifyableExpansionCone::split_spoke_and_move_vertex(const Ver
                            vertex(cone_v_prime)});
 
     //if(max_byte_size(new_position) > 100){
-        //std::cout<<" --> moved vertex "<<cone_v_prime<<" to position with byte size = "<<max_byte_size(new_position)<<std::endl;
+        //SS_DEBUG(" --> moved vertex "<<cone_v_prime<<" to position with byte size = "<<max_byte_size(new_position)<<std::endl);
     //}
     SS_DEBUG(" - "<<cone_v<<"' = "<<cone_v_prime<<" at "<<vec2vec(vertex(cone_v_prime)));
     //SS_DEBUG(" ------------");
@@ -3157,8 +3156,8 @@ VertexHandle StarShapifyableExpansionCone::split_base_edge_and_register_split(co
     //SS_DEBUG(" --> set "<<mid_vertex<<" as original base vertex of itself");
 
     if(original_edge_prop_[edge_handle(to_split)]){
-        auto first_half_e = edge_handle(halfedge(cone_from_v, mid_vertex));
-        auto second_half_e = edge_handle(halfedge(cone_to_v,   mid_vertex));
+        auto first_half_e = edge_handle(find_halfedge(cone_from_v, mid_vertex));
+        auto second_half_e = edge_handle(find_halfedge(cone_to_v,   mid_vertex));
         original_edge_prop_[first_half_e] = true;
         original_edge_prop_[second_half_e] = true;
         SS_DEBUG(" --> marked new edges "<<edge(first_half_e)<<" and "<<edge(second_half_e)<<" as pieces of and original edge");
@@ -3198,9 +3197,9 @@ VertexHandle StarShapifyableExpansionCone::split_base_edge_and_register_split(co
 
 int StarShapifyableExpansionCone::add_visible_neighbors_to_unremoved_candidates_to_candidates_list(std::vector<VertexHandle>& candidate_vertices){
 
-    std::cout<<" --------------------------------------------------"<<std::endl;
-    std::cout<<" - adding visible neighbors to unremoved candidates to candidates list..."<<std::endl;
-    std::cout<<" - initial size: "<<candidate_vertices.size()<<std::endl;
+    SS_DEBUG(" --------------------------------------------------"<<std::endl);
+    SS_DEBUG(" - adding visible neighbors to unremoved candidates to candidates list..."<<std::endl);
+    SS_DEBUG(" - initial size: "<<candidate_vertices.size()<<std::endl);
 
     auto already_candidate_prop = request_vertex_property<bool>();
     for(auto candidate_v: candidate_vertices){
@@ -3211,7 +3210,7 @@ int StarShapifyableExpansionCone::add_visible_neighbors_to_unremoved_candidates_
 
     bool added_at_least_one(false);
     for(auto candidate_v: candidate_vertices){
-        std::cout<<" -- checking candidate "<<candidate_v<<std::endl;
+        SS_DEBUG(" -- checking candidate "<<candidate_v<<std::endl);
         if(!collapsed_prop_[candidate_v]){
             for(auto out_he: outgoing_halfedges(candidate_v)){
                 auto neighbor = to_vertex_handle(out_he);
@@ -3221,7 +3220,7 @@ int StarShapifyableExpansionCone::add_visible_neighbors_to_unremoved_candidates_
                     new_candidates.push_back(neighbor);
                     already_candidate_prop[neighbor] = true;
                     added_at_least_one = true;
-                    std::cout<<" ---> added candidate neighbor "<<neighbor<<std::endl;
+                    SS_DEBUG(" ---> added candidate neighbor "<<neighbor<<std::endl);
                 }
             }
         }
@@ -3231,8 +3230,8 @@ int StarShapifyableExpansionCone::add_visible_neighbors_to_unremoved_candidates_
         candidate_vertices.push_back(v);
     }
 
-    std::cout<<" ...done, final size: "<<candidate_vertices.size()<<std::endl;
-    std::cout<<" --------------------------------------------------"<<std::endl;
+    SS_DEBUG(" ...done, final size: "<<candidate_vertices.size()<<std::endl);
+    SS_DEBUG(" --------------------------------------------------"<<std::endl);
 
     return !added_at_least_one;
 }
@@ -3243,28 +3242,28 @@ bool StarShapifyableExpansionCone::tips_1_ring_neighborhood_is_visible_from_witn
 
 
     if(print_details){
-        std::cout<<" =========================="<<std::endl;
-        std::cout<<" VISIBILITY CHECK:"<<std::endl;
+        SS_DEBUG(" =========================="<<std::endl);
+        SS_DEBUG(" VISIBILITY CHECK:"<<std::endl);
     }
     bool all_visible(true);
     for(auto cone_tip: cone_tip_vertices_){
-        //std::cout<<" - cone tip "<<cone_tip<<std::endl;
+        //SS_DEBUG(" - cone tip "<<cone_tip<<std::endl);
         for(auto out_he: outgoing_halfedges(cone_tip)){
             auto neighbor = to_vertex_handle(out_he);
-            //std::cout<<" -- neighbor "<<neighbor<<std::endl;
+            //SS_DEBUG(" -- neighbor "<<neighbor<<std::endl);
             if(!tip_vertices_prop_[neighbor] && neighbor != witness_vertex_){
                 bool visible = is_visible_from(witness_vertex_, neighbor);
 
                 all_visible &= visible;
                 if(print_details){
-                    std::cout<<" - "<<neighbor<<": "<<visible<<std::endl;
+                    SS_DEBUG(" - "<<neighbor<<": "<<visible<<std::endl);
                 }
             }
         }
     }
 
     if(print_details){
-        std::cout<<" =========================="<<std::endl;
+        SS_DEBUG(" =========================="<<std::endl);
     }
 
     return all_visible;
@@ -3276,7 +3275,7 @@ void StarShapifyableExpansionCone::check_for_timeout() const{
     int current_duration_s = (float)std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time_).count() /1000;
 
     if(current_duration_s > max_allocated_time_s_){
-        std::cout<<" --> star-shapification timeout"<<std::endl;
+        SS_DEBUG(" --> star-shapification timeout"<<std::endl);
         throw TimeOutException();
     }
 

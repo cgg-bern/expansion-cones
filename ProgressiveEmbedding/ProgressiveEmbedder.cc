@@ -29,17 +29,17 @@ int ProgressiveEmbedder::shrinkAndExpand(TetrahedralMesh& mesh,
                                          const std::string& mesh_name,
                                          const std::string& output_file_path,
                                          int boundary_mapping_method,
-                                         int shrinkage_method){
+                                         int debug_expander){
 
     ProgressiveEmbedder embedder(mesh, mesh_name, output_file_path);
-    return embedder.shrink_and_expand(boundary_mapping_method, shrinkage_method);
+    return embedder.shrink_and_expand(boundary_mapping_method, debug_expander);
 
 }
 
 
 
 int ProgressiveEmbedder::shrink_and_expand(int boundary_mapping_method,
-                                           int shrinkage_method){
+                                           int debug_expander){
 
     if(PEHelpers::BCI_edges_count(mesh_)){
         std::cout<<" ERROR - cannot Shrink-and-Expand mesh with boundary-connecting interior edges"<<std::endl;
@@ -156,7 +156,7 @@ int ProgressiveEmbedder::shrink_and_expand(int boundary_mapping_method,
 
     auto expansion_start_time = std::chrono::high_resolution_clock::now();
     double expansion_time_s(0);
-    Expander expander(mesh_, input_mesh, mesh_name_, false);
+    Expander expander(mesh_, input_mesh, mesh_name_, !debug_expander);
     SAE_result = expander.fully_expand_mesh("expansion_details_"+output_file_path_,
                                             DEFAULT_EXPANSION_SCHEME,
                                             expansion_time_s);
@@ -439,12 +439,6 @@ void ProgressiveEmbedder::export_shrinkage_data_to_json(JsonExporter& exporter,
     exporter.write("shrinkage_time_s", shrinkage_time_s);
     exporter.write("shrinkage_result", shrinkage_result);
     exporter.write("full_shrinkage_necessary", -1);
-
-    std::cout<<" cluster sizes: ";
-    for(auto c: cluster_sizes){
-        std::cout<<" "<<c;
-    }
-    std::cout<<std::endl;
 
     if(cluster_sizes.empty()){
         exporter.write_vector("cluster_sizes", std::vector<int>({count_interior_vertices()}));

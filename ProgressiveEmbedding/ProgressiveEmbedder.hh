@@ -8,7 +8,6 @@
 
 namespace OpenVolumeMesh{
 
-typedef enum {FULL_SHRINKAGE=0, EDGE_BASED_MINIMAL_SHRINKAGE} SHRINKAGE_METHOD;
 typedef enum {TET_ONLY=1, STIFF_TET, TET_TO_SPHERE, TET_TO_RANDOM_STAR_SHAPE} BOUNDARY_MAPPING_METHOD;
 
 
@@ -30,7 +29,7 @@ public:
                                const std::string& mesh_name,
                                const std::string& output_file_path,
                                int boundary_mapping_method,
-                               int shrinkage_method = EDGE_BASED_MINIMAL_SHRINKAGE);
+                               int debug_expander);
 
 
 
@@ -73,7 +72,7 @@ private:
                         const std::string& output_file_path);
 
     int shrink_and_expand(int boundary_mapping_method,
-                          int shrinkage_method);
+                          int debug_expander);
 
 
     int count_interior_vertices() const;

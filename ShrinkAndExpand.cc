@@ -52,6 +52,34 @@ void smooth_interior(TetrahedralMesh& mesh,
                      double eps = 1e-7);
 
 
+void print_usage(){
+    std::cerr<<" EXPECTED USAGE: ShrinkAndExpand [location] [function_index] [boundary-mapping] [option]"<<std::endl;
+    std::cout<<"   ---------------------------------------------------- "<<std::endl;
+    std::cout<<"   with [function_index] in:"<<std::endl;
+    std::cout<<"        0 - shrink-and-expand method "<<std::endl;
+    std::cout<<"        1 - map mesh's boundary to be star-shaped"<<std::endl;
+    std::cout<<"   ---------------------------------------------------- "<<std::endl;
+    std::cout<<"   [location] the input .ovm mesh file"<<std::endl;
+    std::cout<<"   ---------------------------------------------------- "<<std::endl;
+    std::cout<<"   [boundary-mapping]: "<<std::endl;
+    std::cout<<"        1 - tetrahedral boundary"<<std::endl;
+    std::cout<<"        2 - stiff tetrahedral boundary"<<std::endl;
+    std::cout<<"        3 - tetrahedral boundary then spherical projection"<<std::endl;
+    std::cout<<"        4 - random star-shaped boundary"<<std::endl;
+    std::cout<<"   ---------------------------------------------------- "<<std::endl;
+    std::cout<<"   [option] "<<std::endl;
+    std::cout<<"   for function_index = 0:"<<std::endl;
+    std::cout<<"        0 - run expansion in silent mode (default)"<<std::endl;
+    std::cout<<"        1 - print out expansion details. "<<std::endl;
+    std::cout<<"            Use this if you want to see what's happening with the algorithm."<<std::endl;
+    std::cout<<"            Note that this doesn't represent TOO MUCH input and doesn't really impeed on performance."<<std::endl;
+    std::cout<<"   for function_index = 1:"<<std::endl;
+    std::cout<<"        0 -    output only export "<<std::endl;
+    std::cout<<"        1 - input + output export (including boundary cleanup)"<<std::endl;
+    std::cout<<"        2 - input + output export + TLC formatted"<<std::endl;
+    std::cout<<"   ---------------------------------------------------- "<<std::endl;
+}
+
 /**
  * NOTE ABOUT VALIDATION FILES: To make sure the process actually terminated,
  * the trick is to create a file at the beginning and then to delete it.
@@ -62,39 +90,8 @@ int main(int argc, char** argv) {
 
 
 #warning TODO: rename executable for something like "BatchProcessor"
-    if(argc < 3 || argc > 6){
-        std::cerr<<" EXPECTED USAGE: ShrinkAndExpand [location] [function_index] [pre-process] [boundary-mapping] [shrinkage method/export option/domain mesh path]"<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   with [function_index] in:"<<std::endl;
-        std::cout<<"  -3 - output quality statistics to a .txt file for the given mesh. Assumes it contains two string props containing the domain and codomain positions"<<std::endl;
-        std::cout<<"  -2 - prints statistics on the mesh given in argument"<<std::endl;
-        std::cout<<"  -1 - whatever's the current short test function (see StandaloneBatchCollaper_main::short_test_function()) "<<std::endl;
-        std::cout<<"   7 - map mesh's boundary to be star-shaped"<<std::endl;
-        std::cout<<"   8 - shrink-and-expand method. "<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   [location] can either be a single .ovm mesh file (if [function_index] is 0) or a directory"<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   [pre-process] 1 or 0 (default = 1)"<<std::endl;
-        std::cout<<"                 if function_index is -2 or -3, used to pick which method's results are being checed (0:SAE, 1:TLC, 2:FOF)"<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   [boundary-mapping]: "<<std::endl;
-        std::cout<<"        0 - smoothing until star-shapeness"<<std::endl;
-        std::cout<<"        1 - tetrahedral boundary"<<std::endl;
-        std::cout<<"        2 - stiff tetrahedral boundary"<<std::endl;
-        std::cout<<"        3 - tetrahedral boundary then spherical projection"<<std::endl;
-        std::cout<<"        4 - random star-shaped boundary"<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   [export option] (for function_index = 7):"<<std::endl;
-        std::cout<<"        0 - normal export (output only)"<<std::endl;
-        std::cout<<"        1 - input + output export (including boundary cleanup)"<<std::endl;
-        std::cout<<"        2 - input + output export + TLC formatted"<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   [shrinkage method] (for function_index = 8):"<<std::endl;
-        std::cout<<"        0 - full shrinkage"<<std::endl;
-        std::cout<<"        1 - edge-based minimal shrinkage"<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
-        std::cout<<"   [domain mesh path] (for function_index = -3): path to the mesh in the original domain. [pre-process] should be either 1 or 2 in that case "<<std::endl;
-        std::cout<<"   ---------------------------------------------------- "<<std::endl;
+    if(argc < 4 || argc > 5){
+        print_usage();
         return -1;
     }
 
@@ -112,40 +109,28 @@ int main(int argc, char** argv) {
 
 
     int function_index(DEFAULT_FUNCTION_INDEX);
-    if(argc >= 3){
 
-        std::cout<<" argv 2: "<<argv[2]<<std::endl;
-        ss = std::istringstream(argv[2]);
-        if (!(ss >> function_index)) {
-            std::cerr << "Invalid function index: " << argv[2] << '\n';
-        } else if (!ss.eof()) {
-            std::cerr << "Trailing characters after number: " << argv[2] << '\n';
-        }
+    ss = std::istringstream(argv[2]);
+    if (!(ss >> function_index)) {
+        std::cerr << "Invalid function index: " << argv[2] << '\n';
+    } else if (!ss.eof()) {
+        std::cerr << "Trailing characters after number: " << argv[2] << '\n';
     }
 
-    int pre_process(0);
+
+    int boundary_map(0);
     if(argc >= 4){
         ss = std::istringstream(argv[3]);
-        ss >> pre_process;
+        ss >> boundary_map;
+        std::cout<<" map: "<<boundary_map<<std::endl;
     }
 
-    std::cout<<"       FUNCTION: "<<function_index<<std::endl;
-    std::cout<<" PRE-PROCESSING: "<<pre_process<<std::endl;
-
-    int option1(0);
+    int option(0);
     if(argc >= 5){
         ss = std::istringstream(argv[4]);
-        ss >> option1;
-        std::cout<<" OPTION1: "<<option1<<std::endl;
+        ss >> option;
+        std::cout<<" OPTION: "<<option<<std::endl;
     }
-
-    int option2(0);
-    if(argc >= 6){
-        ss = std::istringstream(argv[5]);
-        ss >> option2;
-        std::cout<<" OPTION2: "<<option2<<std::endl;
-    }
-
 
 
     writeValidationFile(location);
@@ -153,316 +138,9 @@ int main(int argc, char** argv) {
     TetrahedralMesh input_mesh;
     TetrahedralMesh result_mesh;
 
-    //only used to cases -2 and -3
-    std::string method_name = "";
-    auto method = pre_process;
-    if(method == 0){
-        method_name = "SAE";
-    }else if(method == 1){
-        method_name = "TLC";
-    }else if(method == 2){
-        method_name = "FOF";
-    }
-
     switch(function_index){
 
-    case -3:{
-
-        std::cout<<" =================================================================================== "<<std::endl;
-        std::cout<<" COMPUTING AND OUTPUTTING QUALITY STATISTICS FOR MESH AT "<<location<<std::endl;
-        std::cout<<" =================================================================================== "<<std::endl;
-
-
-
-        if(method){
-            std::cout<<" --> using domain and codomain meshes for computations (method = "<<method_name<<")"<<std::endl;
-        }else{
-            std::cout<<" --> using single mesh with string properties for computations"<<std::endl;
-        }
-
-        TetrahedralMesh codomain_mesh;
-        OpenVolumeMesh::IO::FileManager fileManager;
-        //std::cout<<" READING MESH "<<filename.toStdString()<<"..."<<std::endl;
-        auto file_read_status = fileManager.readFile(location, codomain_mesh);
-        if(!file_read_status){
-            std::cout<<" couldn't load mesh "<<location<<std::endl;
-            return -1;
-        }
-
-        std::cout<<" -----------------------------"<<std::endl;
-        std::cout<<" - codomain mesh: "<<std::endl;
-        std::cout<<" - #vertices: "<<codomain_mesh.n_vertices()<<std::endl;
-        std::cout<<" -    #edges: "<<codomain_mesh.n_edges()<<std::endl;
-        std::cout<<" -    #faces: "<<codomain_mesh.n_faces()<<std::endl;
-        std::cout<<" -    #cells: "<<codomain_mesh.n_cells()<<std::endl;
-        std::cout<<" -----------------------------"<<std::endl;
-        std::cout<<" ========================================= "<<std::endl;
-
-        std::string filename, super_directory, directory;
-
-        if(!extract_mesh_name_and_directory(location,
-                                            filename,
-                                            directory)){
-                std::cout<<" ERROR - couldn't extract filename and location"<<std::endl;
-                return -1;
-        }
-
-        auto mesh_name = filename;
-
-        if(!extract_mesh_name_and_directory(directory,
-                                            filename,
-                                            super_directory)){
-            std::cout<<" ERROR - couldn't extract super filename and location"<<std::endl;
-            return -1;
-        }
-
-
-        if(method){
-
-            //std::string output_path = super_directory+"/"+method_name+"_quality_stats.txt";
-            std::string output_path = directory+"/"+method_name+"_quality_stats.txt";
-            std::cout<<" -> writing stats to "<<output_path<<std::endl;
-
-            auto bad_tets = BadTetFinder::findBadTets(codomain_mesh);
-
-            if(!bad_tets.first.empty() || !bad_tets.second.empty()){
-                std::cout<<" --> codomain mesh contains degenerate or flipped tets, skipping"<<std::endl;
-                return 0;
-            }
-
-            TetrahedralMesh domain_mesh;
-            ss = std::istringstream(argv[5]);
-            std::string domain_mesh_location;
-            if(!(ss>>domain_mesh_location)){
-                std::cout<<" ERROR - couldn't read domain mesh path "<<argv[5]<<std::endl;
-            }
-
-            OpenVolumeMesh::IO::FileManager fileManager;
-            //std::cout<<" READING MESH "<<filename.toStdString()<<"..."<<std::endl;
-            auto file_read_status = fileManager.readFile(domain_mesh_location, domain_mesh);
-            if(!file_read_status){
-                std::cout<<" couldn't load mesh "<<domain_mesh_location<<std::endl;
-                return -1;
-            }
-
-            std::cout<<" -----------------------------"<<std::endl;
-            std::cout<<" - domain mesh: "<<std::endl;
-            std::cout<<" - #vertices: "<<domain_mesh.n_vertices()<<std::endl;
-            std::cout<<" -    #edges: "<<domain_mesh.n_edges()<<std::endl;
-            std::cout<<" -    #faces: "<<domain_mesh.n_faces()<<std::endl;
-            std::cout<<" -    #cells: "<<domain_mesh.n_cells()<<std::endl;
-            std::cout<<" -----------------------------"<<std::endl;
-
-            if(domain_mesh.n_vertices() != codomain_mesh.n_vertices()){
-                std::cout<<" ERROR - domain and codomain meshes don't have the same number of vertices"<<std::endl;
-                return -1;
-            }
-
-            PEHelpers::compute_and_output_quality_statistics(domain_mesh, codomain_mesh, output_path);
-
-        }else{
-
-            //std::string output_path = super_directory+"/"+method_name+"_quality_stats.txt";
-            std::string output_path = directory+"/"+mesh_name+"_"+method_name+"_quality_stats.txt";
-            std::cout<<" -> writing stats to "<<output_path<<std::endl;
-
-            PEHelpers::compute_and_output_quality_statistics(codomain_mesh, output_path);
-        }
-
-
-        break;
-    }
-
-    case -2:{
-
-        std::cout<<" ========================================= "<<std::endl;
-        std::cout<<" PRINTING INFORMATION FOR MESH AT "<<location<<std::endl;
-        std::cout<<" ========================================= "<<std::endl;
-        TetrahedralMesh mesh;
-        OpenVolumeMesh::IO::FileManager fileManager;
-        //std::cout<<" READING MESH "<<filename.toStdString()<<"..."<<std::endl;
-        auto file_read_status = fileManager.readFile(location, mesh);
-        if(!file_read_status){
-            std::cout<<" couldn't load mesh "<<location<<std::endl;
-            return -1;
-        }
-
-
-        auto bad_tets = BadTetFinder::findBadTets(mesh);
-        auto entangled_edges_count = PEHelpers::count_entangled_edges(mesh);
-
-        std::cout<<" -----------------------------"<<std::endl;
-        std::cout<<" - #vertices: "<<mesh.n_vertices()<<std::endl;
-        std::cout<<" -    #edges: "<<mesh.n_edges()<<std::endl;
-        std::cout<<" -    #faces: "<<mesh.n_faces()<<std::endl;
-        std::cout<<" -    #cells: "<<mesh.n_cells()<<std::endl;
-        std::cout<<" -----------------------------"<<std::endl;
-        std::cout<<" - degenerate cells: "<<bad_tets.first.size()<<std::endl;
-        std::cout<<" -    flipped cells: "<<bad_tets.second.size()<<std::endl;
-        std::cout<<" -----------------------------"<<std::endl;
-        std::cout<<"    entangled edges: "<<entangled_edges_count<<std::endl;
-        std::cout<<" ========================================= "<<std::endl;
-
-        std::string filename, super_directory, directory;
-
-        if(!extract_mesh_name_and_directory(location,
-                                            filename,
-                                            directory)){
-                std::cout<<" ERROR - couldn't extract filename and location"<<std::endl;
-                return -1;
-        }
-        if(!extract_mesh_name_and_directory(directory,
-                                            filename,
-                                            super_directory)){
-            std::cout<<" ERROR - couldn't extract super filename and location"<<std::endl;
-            return -1;
-        }
-
-
-        std::string output_path = directory+"/"+method_name+"_stats.txt";
-        std::cout<<" -> writing stats to "<<output_path<<std::endl;
-
-        std::ofstream output_file(output_path);
-        if(!output_file.is_open()){
-            std::cout<<" ERROR - couldn't open stat file "<<output_path<<std::endl;
-            return -1;
-        }
-
-        std::cout<<" location: "<<location<<std::endl;
-        std::cout<<" filename: "<<filename<<std::endl;
-        std::cout<<" directory: "<<directory<<std::endl;
-        std::cout<<" super_directory: "<<super_directory<<std::endl;
-
-        output_file<<filename<<std::endl;
-        output_file<<mesh.n_vertices()<<std::endl;
-        output_file<<mesh.n_edges()<<std::endl;
-        output_file<<mesh.n_faces()<<std::endl;
-        output_file<<mesh.n_cells()<<std::endl;
-        output_file<<bad_tets.first.size()<<std::endl;
-        output_file<<bad_tets.second.size()<<std::endl;
-        output_file<<entangled_edges_count<<std::endl;
-
-        output_file.close();
-
-        break;
-    }
-
-    case 7:{
-
-
-        std::cout<<"  MAPPING TO STAR-SHAPED BOUNDARY MESH "<<location<<std::endl;
-
-
-        int result(1);
-
-        std::string output_sub_directory = "";
-        switch(option1){
-        case 1:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_tet,
-                                                        std::string(location.c_str()),
-                                                        pre_process,
-                                                        input_mesh,
-                                                        result_mesh);
-            output_sub_directory = "tet_mapped";
-            break;
-        }
-        case 2:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_stiff_unit_tet,
-                                                        std::string(location.c_str()),
-                                                        pre_process,
-                                                        input_mesh,
-                                                        result_mesh);
-            output_sub_directory = "stiff_tet_mapped";
-            break;
-        }
-        case 3:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_ball_using_tet,
-                                                        std::string(location.c_str()),
-                                                        pre_process,
-                                                        input_mesh,
-                                                        result_mesh);
-            output_sub_directory = "ball_mapped";
-            break;
-        }
-        case 4:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_random_star_shape_using_tet,
-                                                        std::string(location.c_str()),
-                                                        pre_process,
-                                                        input_mesh,
-                                                        result_mesh);
-            output_sub_directory = "random_star_shape_mapped";
-            break;
-        }
-        default:{
-            std::cout<<" unhandled option1 "<<option1<<std::endl;
-            return -1;
-        }
-        }
-
-
-        //OpenVolumeMesh::IO::FileManager fileManager;
-        //fileManager.writeFile("aa_output.ovm", result_mesh);
-
-        result_mesh.collect_garbage();
-
-        switch(result){
-        case 0: {
-            std::cout<<" ========================================================================"<<std::endl;
-            std::cout<<" ==== SUCCESFULLY MAPPED MESH TO BE STAR-SHAPED WITH NO FLIPPED TETS ===="<<location<<std::endl;
-            std::cout<<" ========================================================================"<<std::endl;
-            //copyInputMeshInSubdirectory(location, "ball_mapped");
-
-            std::cout<<" option 2 = "<<option2<<std::endl;
-            if(option2 == 2){
-
-
-                ProgressiveEmbedder::interior_uniform_smoothing(result_mesh);
-
-                export_input_and_output_for_FOF_and_TLC_comparison(location,
-                                                                  output_sub_directory,
-                                                                  input_mesh,
-                                                                  result_mesh);
-
-            }else{
-                if(option2 == 1){
-                    std::cout<<" copying input "<<std::endl;
-
-                    writeResultMeshInSubdirectory(location,
-                                                  output_sub_directory,
-                                                  input_mesh,
-                                                  output_sub_directory+"_input");
-                }
-
-                writeResultMeshInSubdirectory(location,
-                                              output_sub_directory,
-                                              result_mesh,
-                                              output_sub_directory);
-            }
-            removeValidationFile(location);
-            break;
-        }
-        case 1: {
-            std::cout<<" =============================================="<<std::endl;
-            std::cout<<" ==== FAILED TO MAP MESH TO BE STAR-SHAPED ===="<<location<<std::endl;
-            std::cout<<" =============================================="<<std::endl;
-            copyInputMeshInSubdirectory(location, "boundary_mapping_failures");
-            break;
-        }
-
-        default: {
-
-            std::cout<<" ====================================================== "<<std::endl;
-            std::cout<<" ==== PROCESS TERMINATED WITH UNHANDLED RESULT CODE "<<result<<" ===="<<location<<std::endl;
-            std::cout<<" ====================================================== "<<std::endl;
-            removeValidationFile(location);
-        }
-        }
-
-        break;
-
-    }
-
-    case 8:{
+    case 0:{
 
         std::cout<<"  SHRINKING AND EXPANDING MESH "<<location<<std::endl;
 
@@ -472,7 +150,7 @@ int main(int argc, char** argv) {
                 exit(EXIT_FAILURE);
         }
         std::string boundary = "";
-        switch(option1){
+        switch(boundary_map){
         case 1:{
             boundary = "tet_mapped/";
             break;
@@ -490,16 +168,17 @@ int main(int argc, char** argv) {
             break;
         }
         default:{
-            std::cout<<" ERROR - unhandled boundary option "<<option1<<std::endl;
-            break;
+            std::cout<<" ERROR - unhandled boundary "<<boundary_map<<std::endl;
+            print_usage();
+            return -1;
         }
         }
 
         int result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::shrinkAndExpand,
                                                         std::string(location.c_str()),
-                                                        pre_process,
-                                                        option1,
-                                                        option2,
+                                                        true,
+                                                        boundary_map,
+                                                        option,
                                                         input_mesh,
                                                         result_mesh,
                                                         filename,
@@ -617,8 +296,124 @@ int main(int argc, char** argv) {
         break;
     }
 
+    case 1:{
+
+        std::cout<<"  MAPPING TO STAR-SHAPED BOUNDARY MESH "<<location<<std::endl;
+
+        int result(1);
+
+        std::string output_sub_directory = "";
+        switch(boundary_map){
+        case 1:{
+            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_tet,
+                                                        std::string(location.c_str()),
+                                                        true,
+                                                        input_mesh,
+                                                        result_mesh);
+            output_sub_directory = "tet_mapped";
+            break;
+        }
+        case 2:{
+            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_stiff_unit_tet,
+                                                        std::string(location.c_str()),
+                                                        true,
+                                                        input_mesh,
+                                                        result_mesh);
+            output_sub_directory = "stiff_tet_mapped";
+            break;
+        }
+        case 3:{
+            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_ball_using_tet,
+                                                        std::string(location.c_str()),
+                                                        true,
+                                                        input_mesh,
+                                                        result_mesh);
+            output_sub_directory = "ball_mapped";
+            break;
+        }
+        case 4:{
+            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_random_star_shape_using_tet,
+                                                        std::string(location.c_str()),
+                                                        true,
+                                                        input_mesh,
+                                                        result_mesh);
+            output_sub_directory = "random_star_shape_mapped";
+            break;
+        }
+        default:{
+            std::cout<<" unhandled boundary map "<<boundary_map<<std::endl;
+            print_usage();
+        }
+        }
+
+
+        //OpenVolumeMesh::IO::FileManager fileManager;
+        //fileManager.writeFile("aa_output.ovm", result_mesh);
+
+        result_mesh.collect_garbage();
+
+        switch(result){
+        case 0: {
+            std::cout<<" ========================================================================"<<std::endl;
+            std::cout<<" ======= SUCCESFULLY MAPPED MESH BOUNDARY TO A STAR-SHAPED DOMAIN ======="<<location<<std::endl;
+            std::cout<<" ========================================================================"<<std::endl;
+            //copyInputMeshInSubdirectory(location, "ball_mapped");
+
+            std::cout<<" option = "<<option<<std::endl;
+            if(option == 2){
+
+
+                ProgressiveEmbedder::interior_uniform_smoothing(result_mesh);
+
+                export_input_and_output_for_FOF_and_TLC_comparison(location,
+                                                                  output_sub_directory,
+                                                                  input_mesh,
+                                                                  result_mesh);
+
+            }else{
+                if(option == 1){
+                    std::cout<<" copying input "<<std::endl;
+
+                    writeResultMeshInSubdirectory(location,
+                                                  output_sub_directory,
+                                                  input_mesh,
+                                                  output_sub_directory+"_input");
+                }
+
+                writeResultMeshInSubdirectory(location,
+                                              output_sub_directory,
+                                              result_mesh,
+                                              output_sub_directory);
+            }
+            removeValidationFile(location);
+            break;
+        }
+        case 1: {
+            std::cout<<" =============================================="<<std::endl;
+            std::cout<<" ==== FAILED TO MAP MESH TO BE STAR-SHAPED ===="<<location<<std::endl;
+            std::cout<<" =============================================="<<std::endl;
+            copyInputMeshInSubdirectory(location, "boundary_mapping_failures");
+            break;
+        }
+
+        default: {
+
+            std::cout<<" ====================================================== "<<std::endl;
+            std::cout<<" ==== PROCESS TERMINATED WITH UNHANDLED RESULT CODE "<<result<<" ===="<<location<<std::endl;
+            std::cout<<" ====================================================== "<<std::endl;
+            removeValidationFile(location);
+        }
+        }
+
+        break;
+
+    }
+
+
     default:{
         std::cout<<" ERROR - UNKNOWN FUNCTION INDEX"<<std::endl;
+        print_usage();
+        return -1;
     }
 
 

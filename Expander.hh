@@ -323,9 +323,6 @@ namespace OpenVolumeMesh{
 
 
 
-        int post_op_fix_degenerate_cells(const std::vector<CellHandle>& degenerate_cells);
-
-
         /**************************************************** CONE HELPERS ***/
 
         CellHandle add_cell_to_cone(const CellHandle& ch,
