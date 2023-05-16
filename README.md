@@ -3,7 +3,7 @@
 [Valentin Z. NIGOLIAN](https://cgg.unibe.ch/), [Marcel CAMPEN](http://graphics.cs.uos.de/), [David BOMMES](https://cgg.unibe.ch/)
 ACM Transaction on Graphics (Proceedings of SIGGRAPH 2023)
 
-![](/readme/cover-picture.png)
+![](cover-picture.png)
 Our method generates a bijective map of a ball-topology tetrahedral mesh (a) to a star-shaped domain, e.g. a ball (b). Starting with all interior vertices
 clustered inside the domain’s kernel (b), we iteratively split clusters by picking a subset of vertices whose 1-ring neighborhood union has a non-empty kernel.
 By moving this subcluster into this kernel, some initially degenerate tetrahedra are expanded (c), without degenerating or inverting others. Repeating this
