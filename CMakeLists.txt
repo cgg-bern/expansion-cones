@@ -16,52 +16,19 @@ find_package (OpenVolumeMesh REQUIRED _NO_MODULE)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package (CGAL REQUIRED NO_MODULE)
 
-include_directories(ProgressiveEmbedding/)
-include_directories(.)
+FILE(GLOB SOURCE_FILES src/*.cc)
 
-set(SOURCE_FILES
-    ShrinkAndExpand.cc
-    BatchProcessor.cc
-    TetMeshBoundarySplitter.cc
-    BadTetFinder.cc
-    TopoHelper.cc
-    Expander.cc
-    ExpansionDataLogger.cc
-    ExpansionCone.cc
-    ConnectedVertexSubsetIterator.cc
-    StarShapifyableExpansionCone.cc
-    PrecisionDiagnostics.cc
-    TetMapper.cc
-    SphereMapper.cc
-    LightWeightStopWatch.cc
-    OtherHelpers.cc
+include_directories(src/)
 
-    ProgressiveEmbedding/TopologicalLink.cc
-    ProgressiveEmbedding/TopologicalFaceSet.cc
-    ProgressiveEmbedding/ProgressiveEmbedder.cc
-    ProgressiveEmbedding/ProgEmbeddingHelpers.cc)
 
 add_executable(ShrinkAndExpand ${SOURCE_FILES})
 
-
-
     
-#add_subdirectory(OpenVolumeMesh)
-
-
-#target_compile_features(ShrinkAndExpand PUBLIC cxx_std_17)
     
-#message("gurobi libraries: " ${GUROBI_LIBRARIES})
-
 target_link_libraries(ShrinkAndExpand
     OpenVolumeMesh::OpenVolumeMesh
     Eigen3::Eigen
     CGAL::CGAL
-    #OpenMeshCore
-    #CGAL
-    #Qt5::Core
-    #${GUROBI_LIBRARIES}
-    #CoMISo
     )
 
 
