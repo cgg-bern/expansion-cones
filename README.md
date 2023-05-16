@@ -1,5 +1,6 @@
 # expansion-cones
 
+![test](/readme/cover-picture.png)
 
 
 ## Building
