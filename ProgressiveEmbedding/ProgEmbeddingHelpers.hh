@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SubTriangleMap.hh"
 #include "TopoHelper.hh"
 #include "OtherHelpers.hh"
 #include "ExpansionCone.hh"
@@ -97,12 +96,6 @@ public:
 
     static VertexPosition string_to_position(const std::string& str_exact_pos);
 
-    /** The convention for south_side is that it is the set of vertices connected to
-     * the surviving vertex (those connected to collapse.to_vertex */
-    static FaceVerticesVector find_hemispherical_faces(TetrahedralMesh& mesh,
-                                                       const VertexHandle& center_vertex,
-                                                       const EquatorialDisc& equatorial_disc,
-                                                       bool  south_side);
 
 
     /** DBCI: "Double-Boundary-Connected Interior"

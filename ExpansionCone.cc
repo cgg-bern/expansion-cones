@@ -1,5 +1,6 @@
 #include "ExpansionCone.hh"
 #include "ProgEmbeddingHelpers.hh"
+#include <queue>
 
 #include <OpenVolumeMesh/FileManager/FileManager.hh>
 
