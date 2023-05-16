@@ -39,13 +39,23 @@ This project relies on the following libraries:
 
 Make sure to install those in a way that `cmake` can find them with `find_package`
 
-
 ## Usage
 
-The project generates an executable called `ShrinkAndExpand`. You can simply run it without any argument to see its usage.
-Note that the input meshes for this project are in the `.ovm` format (OpenVolumeMesh). 
-If you need to convert your mesh from another data format, please refer to `meshio` and Martin Heistermann's fork supporting .ovm meshes: https://github.com/mheistermann/meshio
+The project generates an executable called `ShrinkAndExpand`. Its typical usage is:
 
+    ./ShrinkAndExpand [input_mesh] [output_location] [function_index] [boundary_mapping] [option]
+
+Where the parameters are as follows:
+
+|  name          |  comments                                                                                                                                      |
+|----------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+|  `input_mesh`  | Your input `.ovm` mesh to map. To obtain a `.ovm`(OpenVolumeMesh) file, you can convert your mesh using Martin Heistermann's [fork]( https://github.com/mheistermann/meshio) of [meshio](https://pypi.org/project/meshio/)  |
+|  `output_location`  | Output _directory_ for the mapped mesh, in `.ovm` format as well. This also creates a `.json` containing data on the expansion process  |
+| `function_index`  | Either 0 for the Shrink-and-Expand process, or 1 to only map the boundary of the mesh (can be used to compare with other methods) |
+| `boundary_mapping`  | Defines the map's boundary conditions. 1: Tetrahedral boundary, 2: Stiff Tetrahedral boundary, 3: Spherical boundary, 4: Random Star-shaped boundary (see paper for details)  | 
+| `option`  | Function-dependent option (0 by default). Please run `ShrinkAndExpand` without any argument for details.|
+
+More information can be found by running `ShrinkAndExpand` without any argument.
 
 
 
