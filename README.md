@@ -12,6 +12,7 @@ obtain the necessary degrees of freedom. A key invariant is that the intermediat
 
 [`Project Page`](https://www.algohex.eu/publications/expansion-cones/)
 [`Dataset`](todo)
+[![DOI](https://zenodo.org/badge/634807458.svg)](https://zenodo.org/doi/10.5281/zenodo.10039967)
 
 ## Abstract
 Volumetric mapping is a ubiquitous and difficult problem in Geometry Processing and has been the subject of research in numerous and various directions. 
