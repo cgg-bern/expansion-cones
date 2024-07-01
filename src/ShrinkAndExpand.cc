@@ -138,8 +138,6 @@ int main(int argc, char** argv) {
     }
 
 
-    TetrahedralMesh input_mesh;
-    TetrahedralMesh result_mesh;
 
     switch(function_index){
 
@@ -166,19 +164,36 @@ int main(int argc, char** argv) {
             std::cout<<" couldn't load domain mesh "<<input_mesh_path<<std::endl;
             return -1;
         }
+        TetMeshBoundarySplitter::preProcessProblematicRegions(domain_mesh);
 
-        std::cout<<" Reading codomain boundary mesh "<<boundary_path<<std::endl;
-        TetrahedralMesh codomain_mesh;
-        file_read_status = fileManager.readFile(boundary_path, codomain_mesh);
-        if(!file_read_status){
-            std::cout<<" couldn't load codomain boundary mesh "<<boundary_path<<std::endl;
-            return -1;
+        TetrahedralMesh codomain_mesh = domain_mesh;
+
+        for(auto v: codomain_mesh.vertices()){
+            codomain_mesh.set_vertex(v, {0,0,0});
         }
 
-        std::cout<<" - codomain v0 pos: "<<codomain_mesh.vertex(VertexHandle(0))<<std::endl;
+        std::ifstream file(boundary_path);
+        if (file.is_open()) {
+            std::string line;
+            while (std::getline(file, line)) {
+                std::istringstream iss(line);
+                // Read idx
+                int idx(-1);
+                iss >> idx;
 
-        TetMeshBoundarySplitter::preProcessProblematicRegions(domain_mesh);
-        TetMeshBoundarySplitter::preProcessProblematicRegions(codomain_mesh);
+                Vec3d pos;
+                for (int i = 0; i < 3; ++i) {
+                    iss >> pos[i];
+                }
+                codomain_mesh.set_vertex(VertexHandle(idx), pos);
+            }
+            file.close();
+        } else {
+            std::cerr << "Couldn't open boundary file " << boundary_path << std::endl;
+        }
+
+        IO::FileManager fm;
+        fm.writeFile("test.ovm", codomain_mesh);
 
         int result = ProgressiveEmbedder::shrinkAndExpand(domain_mesh,
                                                  codomain_mesh,
@@ -196,7 +211,7 @@ int main(int argc, char** argv) {
 
             write_mesh(output_mesh_path,
                        "",//output_path,
-                       result_mesh,
+                       codomain_mesh,
                        "");//"output_" + boundary);
             break;
         }
@@ -233,6 +248,9 @@ int main(int argc, char** argv) {
 
     case 1:{
 
+
+        TetrahedralMesh input_mesh;
+        TetrahedralMesh result_mesh;
         std::cout<<"  MAPPING BOUNDARY OF MESH "<<input_mesh_path<<" TO A STAR-SHAPED CODOMAIN"<<std::endl;
 
         int result(1);
