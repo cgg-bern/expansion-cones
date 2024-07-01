@@ -5,64 +5,58 @@ namespace OpenVolumeMesh{
 
 
 
-ProgressiveEmbedder::ProgressiveEmbedder(TetrahedralMesh& mesh,
+ProgressiveEmbedder::ProgressiveEmbedder(TetrahedralMesh& domain_mesh,
+                                         TetrahedralMesh& codomain_mesh,
                                          const std::string& mesh_name,
-                                         const std::string& output_file_path) :
-    mesh_(mesh),
-    mesh_name_(mesh_name),
-    output_file_path_(output_file_path)
-    /*cluster_prop_(mesh_.request_vertex_property<int>()),
-    to_shrink_prop_(mesh_.request_edge_property<bool>()),
-    shrunk_prop_(mesh_.request_edge_property<bool>()),
-    zero_volume_cells_prop_(mesh_.request_cell_property<bool>()),
-    changed_neighboring_cluster_at_last_iteration_prop_(mesh_.request_vertex_property<bool>()),
-    total_negative_volume_in_1_ring_prop_(mesh_.request_edge_property<double>()),
-    computed_1_ring_volume_at_least_once_prop_(mesh_.request_edge_property<bool>()),
-    best_position_prop_(mesh_.request_edge_property<VertexPosition>()),
-    vertex_position_prop_(mesh_.request_vertex_property<VertexPosition>()),
-    n_initial_interior_edges_(count_interior_edges())*/{
-
-}
+                                         const std::string& output_file_path):
+        domain_mesh_(domain_mesh),
+        codomain_mesh_(codomain_mesh),
+        mesh_name_(mesh_name),
+        output_file_path_(output_file_path){ }
 
 
-int ProgressiveEmbedder::shrinkAndExpand(TetrahedralMesh& mesh,
+int ProgressiveEmbedder::shrinkAndExpand(TetrahedralMesh& domain_mesh,
+                                         TetrahedralMesh& codomain_mesh,
                                          const std::string& mesh_name,
-                                         const std::string& output_file_path,
-                                         int boundary_mapping_method,
+                                         const std::string& output_json_path,
                                          int debug_expander){
 
-    ProgressiveEmbedder embedder(mesh, mesh_name, output_file_path);
-    return embedder.shrink_and_expand(boundary_mapping_method, debug_expander);
+    ProgressiveEmbedder embedder(domain_mesh, codomain_mesh, mesh_name, output_json_path);
+    return embedder.shrink_and_expand(debug_expander);
 
 }
 
 
 
-int ProgressiveEmbedder::shrink_and_expand(int boundary_mapping_method,
-                                           int debug_expander){
+int ProgressiveEmbedder::shrink_and_expand(int debug_expander){
 
-    if(PEHelpers::BCI_edges_count(mesh_)){
+    if(PEHelpers::BCI_edges_count(codomain_mesh_)){
         std::cout<<" ERROR - cannot Shrink-and-Expand mesh with boundary-connecting interior edges"<<std::endl;
         return -1;
     }
 
-    TetrahedralMesh input_mesh = mesh_;
+std::cout<<" interior vertices positions: "<<std::endl;
+    for(auto v: codomain_mesh_.vertices()){
+        if(!codomain_mesh_.is_boundary(v)){
+            std::cout<<" - "<<v<<" at "<<codomain_mesh_.vertex(v)<<std::endl;
+        }
+    }
 
-   if(!Expander::at_least_one_expanded_vertex(mesh_) && boundary_mapping_method >= 0){
+   if(!Expander::at_least_one_expanded_vertex(codomain_mesh_)){
 
-        SphereMapper::center_mesh(mesh_);
-        SphereMapper::map_interior_to_centroid(mesh_);
+        SphereMapper::center_mesh(codomain_mesh_);
+        SphereMapper::map_interior_to_centroid(codomain_mesh_);
 
-        for(auto f: mesh_.faces()){
-            if(mesh_.is_boundary(f)){
-                auto f_vertices = mesh_.get_halfface_vertices(mesh_.halfface_handle(f, 0));
-                auto tri = CGAL_Triangle3(OVMvec3ToCGALPoint3(mesh_.vertex(f_vertices[0])),
-                        OVMvec3ToCGALPoint3(mesh_.vertex(f_vertices[1])),
-                        OVMvec3ToCGALPoint3(mesh_.vertex(f_vertices[2])));
+        for(auto f: codomain_mesh_.faces()){
+            if(codomain_mesh_.is_boundary(f)){
+                auto f_vertices = codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(f, 0));
+                auto tri = CGAL_Triangle3(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
+                        OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
+                        OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])));
 
-                if(CGAL::collinear(OVMvec3ToCGALPoint3(mesh_.vertex(f_vertices[0])),
-                                   OVMvec3ToCGALPoint3(mesh_.vertex(f_vertices[1])),
-                                   OVMvec3ToCGALPoint3(mesh_.vertex(f_vertices[2])))){
+                if(CGAL::collinear(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
+                                   OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
+                                   OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])))){
                     std::cout<<" --> input boundary face "<<f<<": "<<f_vertices<<" is collinear "<<std::endl;
                     return -1;
 
@@ -75,72 +69,42 @@ int ProgressiveEmbedder::shrink_and_expand(int boundary_mapping_method,
             }
         }
 
-        switch(boundary_mapping_method){
-
-        case TET_ONLY:{
-            //TetMapper::map_boundary_to_tet(mesh_);
-            //SphereMapper::map_interior_to_centroid(mesh_);
-            map_to_unit_tet(mesh_);
-            break;
-        }
-        case STIFF_TET:{
-            //TetMapper::map_boundary_to_tet(mesh_);
-            //SphereMapper::map_interior_to_centroid(mesh_);
-            map_to_stiff_unit_tet(mesh_);
-            break;
-        }
-        case TET_TO_SPHERE:{
-            /*TetMapper::map_boundary_to_tet(mesh_);
-            SphereMapper::map_interior_to_centroid(mesh_);
-            SphereMapper::project_boundary_to_sphere(mesh_,1.);*/
-            map_to_unit_ball_using_tet(mesh_);
-            break;
-        }
-        case TET_TO_RANDOM_STAR_SHAPE:{
-
-            map_to_random_star_shape_using_tet(mesh_);
-            break;
-        }
-        default:{
-            std::cout<<" ERROR - unhandled boundary mapping case "<<boundary_mapping_method<<std::endl;
-            return -1;
-        }
-        }
-
-        if(!SphereMapper::is_boundary_star_shaped_and_non_degenerate(mesh_)){
+        if(!SphereMapper::is_boundary_star_shaped_and_non_degenerate(codomain_mesh_)){
             std::cout<<" ERROR - Input mesh contains degenerate boundary triangles or is not star-shaped after boundary mapping"<<std::endl;
+            IO::FileManager fm;
+            fm.writeFile("a_bad_input.ovm", codomain_mesh_);
             return -1;
         }
 
     }else{
-        std::cout<<" ==> MESH WAS ALREADY PARTIALLY EXPANDED OR BOUNDARY-MAPPING EXPLICITLY SKIPPED, SKIPPING BOUNDARY-MAPPING"<<std::endl;
+        std::cout<<" ==> MESH WAS ALREADY PARTIALLY EXPANDED, SKIPPING BOUNDARY CHECK"<<std::endl;
    }
 
 
-    auto boundary_area = SphereMapper::boundary_area(mesh_);
+    auto boundary_area = SphereMapper::boundary_area(codomain_mesh_);
     std::cout<<" WARNING - set centroid to origin"<<std::endl;
     Vec3d centroid = {0,0,0};
     //auto result = mesh_cone.find_max_min_volume_center(centroid, 1, boundary_area);
 
     //centroid = {0,0,0};
 
-    for(auto v: mesh_.vertices()){
-        if(!mesh_.is_boundary(v)){
-            mesh_.set_vertex(v, centroid);
+    for(auto v: codomain_mesh_.vertices()){
+        if(!codomain_mesh_.is_boundary(v)){
+            codomain_mesh_.set_vertex(v, centroid);
         }
     }
 
     std::cout<<" - mesh centroid = "<<vec2vec(centroid)<<std::endl;
 
-    if(BadTetFinder::meshContainsFlippedTets(mesh_)){
+    if(BadTetFinder::meshContainsFlippedTets(codomain_mesh_)){
 
         std::cout<<" ERROR - mesh contains flipped tets with centroid = "<<centroid<<std::endl;
 
-        auto init_flipped_tets_count = BadTetFinder::findBadTets(mesh_).second.size();
-        std::cout<<" - initial flipped tets with min-max volume centroid: "<<init_flipped_tets_count<<std::endl;
+        auto init_flipped_tets_count = BadTetFinder::findBadTets(codomain_mesh_).second.size();
+        std::cout<<" - initial flipped tets: "<<init_flipped_tets_count<<std::endl;
 
-        IO::FileManager fm;
-        fm.writeFile("a_bad_centroid.ovm", mesh_);
+        //IO::FileManager fm;
+        //fm.writeFile("a_bad_centroid.ovm", codomain_mesh_);
         return -1;
     }
 
@@ -156,8 +120,8 @@ int ProgressiveEmbedder::shrink_and_expand(int boundary_mapping_method,
 
     auto expansion_start_time = std::chrono::high_resolution_clock::now();
     double expansion_time_s(0);
-    Expander expander(mesh_, input_mesh, mesh_name_, !debug_expander);
-    SAE_result = expander.fully_expand_mesh("expansion_details_"+output_file_path_,
+    Expander expander(codomain_mesh_, domain_mesh_, mesh_name_, !debug_expander);
+    SAE_result = expander.fully_expand_mesh(output_file_path_,
                                             DEFAULT_EXPANSION_SCHEME,
                                             expansion_time_s);
 
@@ -341,14 +305,14 @@ int ProgressiveEmbedder::mesh_contains_flipped_tets_or_degenerate_boundary_trian
 
 
 int ProgressiveEmbedder::count_interior_vertices() const{
-    return mesh_.n_vertices() - count_boundary_vertices();
+    return codomain_mesh_.n_vertices() - count_boundary_vertices();
 }
 
 int ProgressiveEmbedder::count_boundary_vertices() const{
 
     int count(0);
-    for(auto v: mesh_.vertices()){
-        count += mesh_.is_boundary(v);
+    for(auto v: codomain_mesh_.vertices()){
+        count += codomain_mesh_.is_boundary(v);
     }
     return count;
 }
@@ -356,7 +320,7 @@ int ProgressiveEmbedder::count_boundary_vertices() const{
 
 int ProgressiveEmbedder::count_interior_edges() const{
     int count(0);
-    for(auto e: mesh_.edges()){
+    for(auto e: codomain_mesh_.edges()){
         count += is_interior(e);
     }
     return count;
@@ -365,15 +329,15 @@ int ProgressiveEmbedder::count_interior_edges() const{
 
 int ProgressiveEmbedder::count_boundary_edges() const{
     int count(0);
-    for(auto e: mesh_.edges()){
-        count += mesh_.is_boundary(e);
+    for(auto e: codomain_mesh_.edges()){
+        count += codomain_mesh_.is_boundary(e);
     }
     return count;
 }
 
 bool ProgressiveEmbedder::is_interior(const EdgeHandle& eh) const{
-    return !mesh_.is_boundary(mesh_.edge(eh).from_vertex()) &&
-           !mesh_.is_boundary(mesh_.edge(eh).to_vertex());
+    return !codomain_mesh_.is_boundary(codomain_mesh_.edge(eh).from_vertex()) &&
+           !codomain_mesh_.is_boundary(codomain_mesh_.edge(eh).to_vertex());
 }
 
 
@@ -383,8 +347,8 @@ void ProgressiveEmbedder::setup_json_exporter(JsonExporter& exporter){
     //11 vertex valence histogram
     const int valence_cap(20);
     std::vector<int> vertex_valence_histogram(valence_cap+1);
-    for(auto v: mesh_.vertices()){
-        auto val = mesh_.valence(v);
+    for(auto v: codomain_mesh_.vertices()){
+        auto val = codomain_mesh_.valence(v);
         if(val > valence_cap){
             vertex_valence_histogram[valence_cap]++;
         }else{
@@ -394,8 +358,8 @@ void ProgressiveEmbedder::setup_json_exporter(JsonExporter& exporter){
 
     //12 edge valence histogram
     std::vector<int> edge_valence_histogram(valence_cap+1);
-    for(auto e: mesh_.edges()){
-        auto val = mesh_.valence(e);
+    for(auto e: codomain_mesh_.edges()){
+        auto val = codomain_mesh_.valence(e);
         if(val > valence_cap){
             edge_valence_histogram[valence_cap]++;
         }else{
@@ -404,20 +368,20 @@ void ProgressiveEmbedder::setup_json_exporter(JsonExporter& exporter){
     }
 
     double kappa, stdev;
-    //TopoHelper::connectivity_matrix_condition_number(mesh_, kappa);
+    //TopoHelper::connectivity_matrix_condition_number(codomain_mesh_, kappa);
 
     double avg_val_grad;
-    auto val_grad_prop = mesh_.request_vertex_property<double>();
-    TopoHelper::compute_valence_gradient(mesh_, val_grad_prop, avg_val_grad);
+    auto val_grad_prop = codomain_mesh_.request_vertex_property<double>();
+    TopoHelper::compute_valence_gradient(codomain_mesh_, val_grad_prop, avg_val_grad);
 
     exporter.write("mesh_name", mesh_name_);
-    exporter.write_vector("mesh", std::vector<size_t>({mesh_.n_vertices(), mesh_.n_edges(), mesh_.n_faces(), mesh_.n_cells()}));
+    exporter.write_vector("mesh", std::vector<size_t>({codomain_mesh_.n_vertices(), codomain_mesh_.n_edges(), codomain_mesh_.n_faces(), codomain_mesh_.n_cells()}));
     exporter.write("n_interior_vertices", count_interior_vertices());
     exporter.write("n_interior_edges", count_interior_edges());
     exporter.write("n_boundary_edges", count_boundary_edges());
     exporter.write_vector("vertex_valence_histogram", vertex_valence_histogram);
     exporter.write_vector("edge_valence_histogram", edge_valence_histogram);
-    exporter.write("n_initial_flipped_tets", BadTetFinder::findBadTets(mesh_).second.size());
+    exporter.write("n_initial_flipped_tets", BadTetFinder::findBadTets(codomain_mesh_).second.size());
     exporter.write("initial_avg_val_grad", avg_val_grad);
 }
 
@@ -430,8 +394,8 @@ void ProgressiveEmbedder::export_shrinkage_data_to_json(JsonExporter& exporter,
     std::vector<int> cluster_sizes;
 
     int shrunk_edges_count(0);
-    for(auto e: mesh_.edges()){
-        if(mesh_.vertex(mesh_.edge(e).from_vertex()) == mesh_.vertex(mesh_.edge(e).to_vertex())){
+    for(auto e: codomain_mesh_.edges()){
+        if(codomain_mesh_.vertex(codomain_mesh_.edge(e).from_vertex()) == codomain_mesh_.vertex(codomain_mesh_.edge(e).to_vertex())){
             shrunk_edges_count++;
         }
     }
@@ -446,7 +410,7 @@ void ProgressiveEmbedder::export_shrinkage_data_to_json(JsonExporter& exporter,
         exporter.write_vector("cluster_sizes", cluster_sizes);
     }
     exporter.write("n_shrunk_edges", shrunk_edges_count);
-    exporter.write("n_degenerate_tets_after_shrinkage", BadTetFinder::findBadTets(mesh_).first.size());
+    exporter.write("n_degenerate_tets_after_shrinkage", BadTetFinder::findBadTets(codomain_mesh_).first.size());
     exporter.write("n_LPs_solved", -1);
     exporter.write("n_back_up_positions", -1);
     exporter.write("n_skipped_flipped_tet_edges", -1);
@@ -464,22 +428,22 @@ void ProgressiveEmbedder::export_expansion_data_to_json(JsonExporter& exporter,
                                                         const int cluster_expansions_count,
                                                         const int cluster_star_shapifications_count){
 
-    auto bad_tets = BadTetFinder::findBadTets(mesh_);
+    auto bad_tets = BadTetFinder::findBadTets(codomain_mesh_);
 
 
     double kappa, stdev;
-    //TopoHelper::connectivity_matrix_condition_number(mesh_, kappa);
+    //TopoHelper::connectivity_matrix_condition_number(codomain_mesh_, kappa);
 
     double avg_val_grad;
-    auto val_grad_prop = mesh_.request_vertex_property<double>();
-    TopoHelper::compute_valence_gradient(mesh_, val_grad_prop, avg_val_grad);
+    auto val_grad_prop = codomain_mesh_.request_vertex_property<double>();
+    TopoHelper::compute_valence_gradient(codomain_mesh_, val_grad_prop, avg_val_grad);
 
     exporter.write("expansion_time_s", expansion_time_s);
     exporter.write("expansion_result", expansion_result);
-    exporter.write("n_vertices_after_expansion", mesh_.n_logical_vertices());
-    exporter.write("n_edges_after_expansion", mesh_.n_logical_edges());
-    exporter.write("n_faces_after_expansion", mesh_.n_logical_faces());
-    exporter.write("n_cells_after_expansion", mesh_.n_logical_cells());
+    exporter.write("n_vertices_after_expansion", codomain_mesh_.n_logical_vertices());
+    exporter.write("n_edges_after_expansion", codomain_mesh_.n_logical_edges());
+    exporter.write("n_faces_after_expansion", codomain_mesh_.n_logical_faces());
+    exporter.write("n_cells_after_expansion", codomain_mesh_.n_logical_cells());
     exporter.write("n_remaining_unexpanded_vertices", left_to_expand_count);
     exporter.write("n_degenerate_tets_after_expansion", bad_tets.first.size());
     exporter.write("n_flipped_tets_after_expansion", bad_tets.second.size());

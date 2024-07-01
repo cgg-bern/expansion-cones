@@ -33,9 +33,11 @@ void export_input_and_output_for_FOF_and_TLC_comparison(std::string location,
 void print_usage(){
     std::cerr<<" EXPECTED USAGE: ShrinkAndExpand [input_mesh] [output_mesh] [function_index] [boundary_mapping] [option]"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
-    std::cout<<"   [input_mesh] the input .ovm mesh file"<<std::endl;
+    std::cout<<"   [input_mesh] the input (domain) mesh in .ovm format"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
-    std::cout<<"   [output_mesh] the output .ovm mesh file. A .json file containing some expansion stats will created at the same location"<<std::endl;
+    std::cout<<"   [output_mesh] the output mesh in .ovm format. "<<std::endl;
+    std::cout<<"         In case function_index is 0, the executable will also generate .json file containing some expansion stats at the same location"<<std::endl;
+    std::cout<<"         The domain position of the domain (including its vertices created by potential splits) will be stored as a property of the output mesh"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
     std::cout<<"   with [function_index] in:"<<std::endl;
     std::cout<<"        0 - shrink-and-expand method "<<std::endl;
@@ -44,11 +46,13 @@ void print_usage(){
     std::cout<<"   [boundary_mapping]: "<<std::endl;
     std::cout<<"   for function_index = 0:"<<std::endl;
     std::cout<<"       path to a .ovm mesh with prescribed boundary positions or a text file with the per-vertex positions (see documentation)"<<std::endl;
+    std::cout<<"       IMPORTANT NOTE: those boundary conditions should be set such that the origin is inside the kernel"<<std::endl;
     std::cout<<"   for function_index = 1:"<<std::endl;
     std::cout<<"        1 - tetrahedral boundary"<<std::endl;
     std::cout<<"        2 - stiff tetrahedral boundary"<<std::endl;
     std::cout<<"        3 - tetrahedral boundary then spherical projection"<<std::endl;
     std::cout<<"        4 - random star-shaped boundary"<<std::endl;
+    std::cout<<"    NOTE: the boundary map also splits the chord edges and faces (those whose vertices are boundary but themselves are interior)"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
     std::cout<<"   [option] "<<std::endl;
     std::cout<<"   for function_index = 0:"<<std::endl;
@@ -138,30 +142,46 @@ int main(int argc, char** argv) {
 
     case 0:{
 
-        std::cout<<"  SHRINKING AND EXPANDING MESH "<<input_mesh_path<<" to boundary conditions prescribed by "<<boundary_path<<std::endl;
+        std::cout<<"  SHRINKING AND EXPANDING MESH "<<input_mesh_path<<" WITH BOUNDARY CONDITIONS PRESCRIBED BY "<<boundary_path<<std::endl;
 
         std::string filename, directory;
-        if(!extract_mesh_name_and_directory(input_mesh_path, filename, directory)){
+        if(!extract_mesh_name_and_directory(output_mesh_path, filename, directory)){
                 std::cerr<<" --> couldn't extract directory and filename from location "<<input_mesh_path<<std::endl;
                 exit(EXIT_FAILURE);
         }
         std::string boundary = "";
 
-        std::cout<<" input director/file: "<<directory<<" /"<<filename<<std::endl;
+        std::cout<<" input director/file: "<<directory<<" / "<<filename<<std::endl;
 
-        std::cout<<" stopping for now"<<std::endl;
-        exit(EXIT_FAILURE);
 
-        int result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::shrinkAndExpand,
-                                                        std::string(input_mesh_path.c_str()),
-                                                        true,
-                                                        boundary_map,
-                                                        option,
-                                                        input_mesh,
-                                                        result_mesh,
-                                                        filename,
-                                                        output_mesh_path);
-                                                        //output_path+"/"+filename+"_"+boundary+".json");
+        OpenVolumeMesh::IO::FileManager fileManager;
+
+        std::cout<<" Reading domain mesh "<<input_mesh_path<<std::endl;
+        TetrahedralMesh domain_mesh;
+        auto file_read_status = fileManager.readFile(input_mesh_path, domain_mesh);
+        if(!file_read_status){
+            std::cout<<" couldn't load domain mesh "<<input_mesh_path<<std::endl;
+            return -1;
+        }
+
+        std::cout<<" Reading codomain boundary mesh "<<boundary_path<<std::endl;
+        TetrahedralMesh codomain_mesh;
+        file_read_status = fileManager.readFile(boundary_path, codomain_mesh);
+        if(!file_read_status){
+            std::cout<<" couldn't load codomain boundary mesh "<<boundary_path<<std::endl;
+            return -1;
+        }
+
+        TetMeshBoundarySplitter::preProcessProblematicRegions(domain_mesh);
+        TetMeshBoundarySplitter::preProcessProblematicRegions(codomain_mesh);
+
+        int result = ProgressiveEmbedder::shrinkAndExpand(domain_mesh,
+                                                 codomain_mesh,
+                                                          filename,
+                                                          directory+"/"+filename+"_expansion_data.json",
+                                                          option == 1);
+
+
 
         switch(result){
         case 0: {
@@ -169,7 +189,7 @@ int main(int argc, char** argv) {
             std::cout<<" ==== SUCCESFULLY MAPPED MESH TO A STAR-SHAPED DOMAIN WITH STRICTLY POSITIVE-VOLUME TETS ===="<<std::endl;
             std::cout<<" ============================================================================================"<<std::endl;
 
-            write_mesh(input_mesh_path,
+            write_mesh(output_mesh_path,
                        "",//output_path,
                        result_mesh,
                        "");//"output_" + boundary);
@@ -214,38 +234,39 @@ int main(int argc, char** argv) {
 
         switch(boundary_map){
         case 1:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_tet,
-                                                        std::string(input_mesh_path.c_str()),
-                                                        false,
-                                                        input_mesh,
-                                                        result_mesh);
+            result = BatchProcessor::generate_boundary_conditions(ProgressiveEmbedder::map_to_unit_tet,
+                                                                  std::string(input_mesh_path.c_str()),
+                                                                  true,
+                                                                  input_mesh,
+                                                                  result_mesh);
             //output_sub_directory = "tet_mapped";
             break;
         }
         case 2:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_stiff_unit_tet,
-                                                        std::string(input_mesh_path.c_str()),
-                                                        false,
-                                                        input_mesh,
-                                                        result_mesh);
+            result = BatchProcessor::generate_boundary_conditions(ProgressiveEmbedder::map_to_stiff_unit_tet,
+                                                                  std::string(input_mesh_path.c_str()),
+                                                                  true,
+                                                                  input_mesh,
+                                                                  result_mesh);
             //output_sub_directory = "stiff_tet_mapped";
             break;
         }
         case 3:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_ball_using_tet,
-                                                        std::string(input_mesh_path.c_str()),
-                                                        false,
-                                                        input_mesh,
-                                                        result_mesh);
+            result = BatchProcessor::generate_boundary_conditions(ProgressiveEmbedder::map_to_unit_ball_using_tet,
+                                                                  std::string(input_mesh_path.c_str()),
+                                                                  true,
+                                                                  input_mesh,
+                                                                  result_mesh);
             //output_sub_directory = "ball_mapped";
             break;
         }
         case 4:{
-            result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_random_star_shape_using_tet,
-                                                        std::string(input_mesh_path.c_str()),
-                                                        false,
-                                                        input_mesh,
-                                                        result_mesh);
+            result = BatchProcessor::generate_boundary_conditions(
+                    ProgressiveEmbedder::map_to_random_star_shape_using_tet,
+                    std::string(input_mesh_path.c_str()),
+                    true,
+                    input_mesh,
+                    result_mesh);
             //output_sub_directory = "random_star_shape_mapped";
             break;
         }

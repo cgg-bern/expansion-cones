@@ -758,7 +758,7 @@ int TopoHelper::interiorVerticesCount() const{
     //std::cout<<" interior vertices: ";
     for(auto v: mesh_.vertices()){
         interior_vertices_count += !mesh_.is_boundary(v);
-        /*if(!mesh_.is_boundary(v)){
+        /*if(!codomain_mesh_.is_boundary(v)){
             std::cout<<v<<" ";
         }*/
     }
@@ -815,7 +815,7 @@ void TopoHelper::printOutMeshInformation() {
     std::cout<<" -----                      single cc: "<<singleConnectedComponent(mesh_)<<std::endl;
     std::cout<<" -----                  contains void: "<<containsVoid(mesh_)<<std::endl;
     std::cout<<" -----                no double edges: "<<noDoubleEdges(mesh_)<<std::endl;
-    //std::cout<<" -----    vertex links are 2-manifold: "<<EdgeCollapser::interiorVertexLinksAreTwoManifold(mesh_)<<std::endl;
+    //std::cout<<" -----    vertex links are 2-manifold: "<<EdgeCollapser::interiorVertexLinksAreTwoManifold(codomain_mesh_)<<std::endl;
     std::cout<<" ----- non-manifold boundary vertices: "<<non_manifold_vertices.size()<<std::endl;
     std::cout<<" -----                  non-cell tets: "<<findNonCellTets(mesh_).size()<<std::endl;
     std::cout<<" -----       valence-3 interior edges: "<<valence3InteriorEdgesCount()<<std::endl;

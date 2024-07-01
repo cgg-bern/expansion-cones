@@ -65,7 +65,7 @@ namespace OpenVolumeMesh{
             moved_during_smoothing_prop_(mesh_.request_vertex_property<bool>()),
             valence_at_expanse_computation_(mesh_.request_vertex_property<std::pair<int,int>>()),
             collapsible_new_halfedge_prop_(mesh_.request_halfedge_property<bool>("collapsible_new_edge")),
-            //full_cone_at_last_iteration_prop_(mesh_.request_vertex_property<std::pair<ExpansionCone, int>>("last_expanse")),
+            //full_cone_at_last_iteration_prop_(codomain_mesh_.request_vertex_property<std::pair<ExpansionCone, int>>("last_expanse")),
             cluster_index_prop_(mesh_.request_vertex_property<int>()),
             connecting_cluster_indices_prop_(mesh_.request_edge_property<std::pair<int,int>>()),
             data_logger_(mesh_name),
@@ -115,7 +115,7 @@ namespace OpenVolumeMesh{
                 max_exact_pos_byte_size = std::max(max_exact_pos_byte_size,
                                                    max_byte_size(this->vertex(v)));
 
-                //std::cout<<" - "<<v<<" is deleted: "<<mesh_.is_deleted(v)<<", pos size = "<<std::setw(6)<<byte_size(vertex(v))<<" at "<<std::setprecision(30)<<vec2vec(vertex(v))<<std::endl);
+                //std::cout<<" - "<<v<<" is deleted: "<<codomain_mesh_.is_deleted(v)<<", pos size = "<<std::setw(6)<<byte_size(vertex(v))<<" at "<<std::setprecision(30)<<vec2vec(vertex(v))<<std::endl);
 
 
             }else{
@@ -135,11 +135,11 @@ namespace OpenVolumeMesh{
 
         mesh_.set_shared(expanded_prop_);
         mesh_.set_persistent(expanded_prop_);
-        //mesh_.set_persistent(vertex_position_prop_);
+        //codomain_mesh_.set_persistent(vertex_position_prop_);
         mesh_.set_shared(collapsible_new_halfedge_prop_);
         mesh_.set_persistent(collapsible_new_halfedge_prop_);
-        //mesh_.set_shared(expanse_at_last_iteration_prop_);
-        //mesh_.set_persistent(expanse_at_last_iteration_prop_);
+        //codomain_mesh_.set_shared(expanse_at_last_iteration_prop_);
+        //codomain_mesh_.set_persistent(expanse_at_last_iteration_prop_);
 
 
         for(auto e: mesh_.edges()){
@@ -354,7 +354,7 @@ namespace OpenVolumeMesh{
                                 1e-1,
                                 DEFAULT_POSITION_BYTE_SIZE_SMOOTHING_THRESHOLD);
 
-                if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+                if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
                     PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after smoothing"<<std::endl);
                     expansion_result = -1;
                     break;
@@ -468,7 +468,7 @@ namespace OpenVolumeMesh{
                 PRINT_IF_NOT_SILENT(" --> couldn't fix those cells post-op");
             }
 
-            bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
+            bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
         }*/
 
         //data_logger().print_out_expansion_histogram();
@@ -649,7 +649,7 @@ namespace OpenVolumeMesh{
                 }
 
                 //already in expand_best_exp...
-                /*if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
+                /*if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
                         std::cout << " ERROR - created flipped tets after single EC star-shapification" << std::endl;
                         break;
                     }*/
@@ -874,7 +874,7 @@ namespace OpenVolumeMesh{
             if(!simple_cluster_expansion_result){
 
 #if ENABLE_ALL_CHECKS
-                if (ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
+                if (ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
                     std::cout << " ERROR - created flipped tets after simple cluster expansion" << std::endl;
                     return -1;
                 }
@@ -920,7 +920,7 @@ namespace OpenVolumeMesh{
                     //FIFTH STAGE: star-shapification with any valence
                     if(!simple_cluster_expansion_result){
 #if ENABLE_ALL_CHECKS
-                        if (ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
+                        if (ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
                             std::cout << " ERROR - created flipped tets after simple cluster expansion" << std::endl;
                             return -1;
                         }
@@ -969,7 +969,7 @@ namespace OpenVolumeMesh{
                             }
 
 #if ENABLE_ALL_CHECKS
-                            if (ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
+                            if (ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
                                 std::cout << " ERROR - created flipped tets after star-shapifying cluster" << std::endl;
                                 return -1;
                             }
@@ -1167,7 +1167,7 @@ namespace OpenVolumeMesh{
 
 #if ENABLE_ALL_CHECKS
 
-                if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+                if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
                     PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after smoothing"<<std::endl);
                     return EXPANSION_ERROR;
                 }
@@ -1523,12 +1523,12 @@ namespace OpenVolumeMesh{
 
 
 #if ENABLE_ALL_CHECKS
-        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after performing cluster interface expansion. Flipped tets:"<<std::endl);
-            auto bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
+            auto bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
             for(auto flipped_tet: bad_tets.second){
-                auto volume = OVMtetToCGALtet(mesh_, vertex_position_prop_, flipped_tet).volume();
-                PRINT_IF_NOT_SILENT(" - "<<flipped_tet<<" : "<<mesh_.get_cell_vertices(flipped_tet)<<", volume = "<<volume<<std::endl);
+                auto volume = OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, flipped_tet).volume();
+                PRINT_IF_NOT_SILENT(" - "<<flipped_tet<<" : "<<codomain_mesh_.get_cell_vertices(flipped_tet)<<", volume = "<<volume<<std::endl);
             }
             return -1;
         }
@@ -1696,17 +1696,17 @@ namespace OpenVolumeMesh{
 
 
 #if 0
-        auto updated_edge_prop = mesh_.request_edge_property<bool>();
+        auto updated_edge_prop = codomain_mesh_.request_edge_property<bool>();
 
         for(auto extended_cone_tip_vertex: cluster_submesh.cone_tip_vertices()) {
             auto mesh_tip_vertex = cluster_submesh.cone_to_mesh_handle(extended_cone_tip_vertex);
 
-            for(auto out_he: mesh_.outgoing_halfedges(mesh_tip_vertex)) {
-                auto eh = mesh_.edge_handle(out_he);
+            for(auto out_he: codomain_mesh_.outgoing_halfedges(mesh_tip_vertex)) {
+                auto eh = codomain_mesh_.edge_handle(out_he);
 
                 if(!updated_edge_prop[eh]){
 
-                    auto e = mesh_.edge(eh);
+                    auto e = codomain_mesh_.edge(eh);
 
                     auto from_vertex = e.from_vertex();
                     auto to_vertex   = e.to_vertex();
@@ -1716,16 +1716,16 @@ namespace OpenVolumeMesh{
 
                     if ((connecting_cluster_indices_prop_[eh].first > 0 && from_vertex_cluster_index != connecting_cluster_indices_prop_[eh].first) ||
                             (connecting_cluster_indices_prop_[eh].second > 0 && to_vertex_cluster_index != connecting_cluster_indices_prop_[eh].second)) {
-                        std::cout << " ERROR - edge " << mesh_.edge(eh) <<
+                        std::cout << " ERROR - edge " << codomain_mesh_.edge(eh) <<
                                   " is already connecting clusters " << connecting_cluster_indices_prop_[eh].first <<
                                   " and " << connecting_cluster_indices_prop_[eh].second << std::endl;
                         return -1;
                     }
 
-                    connecting_cluster_indices_prop_[mesh_.edge_handle(out_he)] = {from_vertex_cluster_index,
+                    connecting_cluster_indices_prop_[codomain_mesh_.edge_handle(out_he)] = {from_vertex_cluster_index,
                                                                                    to_vertex_cluster_index};
 
-                    //PRINT_IF_NOT_SILENT(" - set edge "<<mesh_.edge(eh)<<" as connecting clusters "<<from_vertex_cluster_index<<" and "<<to_vertex_cluster_index<<std::endl);
+                    //PRINT_IF_NOT_SILENT(" - set edge "<<codomain_mesh_.edge(eh)<<" as connecting clusters "<<from_vertex_cluster_index<<" and "<<to_vertex_cluster_index<<std::endl);
 
                     updated_edge_prop[eh] = true;
                 }
@@ -1736,9 +1736,9 @@ namespace OpenVolumeMesh{
         PRINT_IF_NOT_SILENT(" ======== CLUSTER EXPANSION RESULT: "<<cluster_expansion_result<<std::endl);
 
 #if ENABLE_ALL_CHECKS
-        auto degenerate_tets_count = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_).first.size();
+        auto degenerate_tets_count = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_).first.size();
         PRINT_IF_NOT_SILENT(" ======== updated degenerates count: "<<degenerate_tets_count<<std::endl);
-        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR: Found flipped tets after expanding cluster"<<std::endl);
             return -1;
         }
@@ -2950,7 +2950,7 @@ namespace OpenVolumeMesh{
         PRINT_IF_NOT_SILENT(" (remaining unexpanded vertices: ("<<unexpanded_vertices.size()<<")"<<std::endl);*/
 
 
-        /*PRINT_IF_NOT_SILENT(" ---> best vertex is "<<best_expanse.center_vertex<<" with valences (val, unexp, exp) = "<<mesh_.valence(best_expanse.center_vertex)<<", "<<unexpansion_valence(best_expanse.center_vertex)<<", "<<expansion_valence(best_expanse.center_vertex)<<std::endl);
+        /*PRINT_IF_NOT_SILENT(" ---> best vertex is "<<best_expanse.center_vertex<<" with valences (val, unexp, exp) = "<<codomain_mesh_.valence(best_expanse.center_vertex)<<", "<<unexpansion_valence(best_expanse.center_vertex)<<", "<<expansion_valence(best_expanse.center_vertex)<<std::endl);
             PRINT_IF_NOT_SILENT(" ---> best cone: "<<best_expanse.expansion_cone<<std::endl);
             PRINT_IF_NOT_SILENT(" ---> best out of "<<expandable_vertices_count<<" expandable vertices found and "<<tried_vertices_count<<" vertices tried"<<std::endl);
             PRINT_IF_NOT_SILENT(" ---> result status: "<<best_expanse.result_status<<std::endl);
@@ -3072,7 +3072,7 @@ namespace OpenVolumeMesh{
 
 #if ENABLE_ALL_CHECKS
 
-                if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(mesh_, vertex_position_prop_, best_expanse.center_vertex)){
+                if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(codomain_mesh_, vertex_position_prop_, best_expanse.center_vertex)){
                     PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after applying star-shapification"<<std::endl);
                     return EXPANSION_ERROR;
                 }
@@ -3149,15 +3149,15 @@ namespace OpenVolumeMesh{
 
 #if ENABLE_ALL_CHECKS
 
-        if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(mesh_, vertex_position_prop_, best_expanse.center_vertex)){
+        if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(codomain_mesh_, vertex_position_prop_, best_expanse.center_vertex)){
             PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after expanding vertex "<<best_expanse.center_vertex<<std::endl);
-            auto flipped_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_).second;
+            auto flipped_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_).second;
 
 
 
             for(auto tet: flipped_tets){
                 PRINT_IF_NOT_SILENT(" tet "<<tet<<" : "<<std::endl);
-                for(auto v: mesh_.get_cell_vertices(tet)){
+                for(auto v: codomain_mesh_.get_cell_vertices(tet)){
                     PRINT_IF_NOT_SILENT(" - "<<v<<" at "<<vec2vec(this->vertex(v))<<", expanded: "<<expanded_prop_[v]<<std::endl);
                 }
             }
@@ -3170,11 +3170,11 @@ namespace OpenVolumeMesh{
         //std::cout<<" [t] flipped tets check duration: "<<flipped_tets_check_duration<<std::endl);
 
         /*PRINT_IF_NOT_SILENT(" --> no flipped tets after finalizing expanse for vertex "<<best_expanse.center_vertex<<std::endl);
-        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR - actually yes: "<<std::endl);
-            auto bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
+            auto bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
             for(auto flipped: bad_tets.second){
-                PRINT_IF_NOT_SILENT(" - "<<mesh_.get_cell_vertices(flipped)<<std::endl);
+                PRINT_IF_NOT_SILENT(" - "<<codomain_mesh_.get_cell_vertices(flipped)<<std::endl);
             }
             return EXPANSION_ERROR;
         }*/
@@ -3186,7 +3186,7 @@ namespace OpenVolumeMesh{
         auto mid_vertices_precision_reduction_duration = stop_watch.lap_duration();
         //std::cout<<" [t] mid-vertices precision reduction duration: "<<mid_vertices_precision_reduction_duration<<std::endl);
 
-        /*if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        /*if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after reducing mid-vertices positions"<<std::endl);
             return EXPANSION_ERROR;
         }*/
@@ -3205,7 +3205,7 @@ namespace OpenVolumeMesh{
                 return EXPANSION_ERROR;
             }
         }
-        /*if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        /*if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after collapsing new edges"<<std::endl);
             return EXPANSION_ERROR;
         }*/
@@ -3248,8 +3248,8 @@ namespace OpenVolumeMesh{
         //then add all the neighboring tets consisting of three
         //expanded vertices and the center vertex
         for(auto vc_it = mesh_.vc_iter(center_vertex); vc_it.valid(); vc_it++){
-            //auto cell_vertices = mesh_.get_cell_vertices(*vc_it);
-            //PRINT_IF_NOT_SILENT(" - checking cell "<<*vc_it<<": "<<mesh_.get_cell_vertices(*vc_it)<<std::endl);
+            //auto cell_vertices = codomain_mesh_.get_cell_vertices(*vc_it);
+            //PRINT_IF_NOT_SILENT(" - checking cell "<<*vc_it<<": "<<codomain_mesh_.get_cell_vertices(*vc_it)<<std::endl);
 
             //when accumulating stuff on a cluster, we temporarily set the tip vertices as
             //expanded, as a trick to work with this function.
@@ -3261,7 +3261,7 @@ namespace OpenVolumeMesh{
                     PRINT_IF_NOT_SILENT(" error whille adding cell"<<std::endl);
                     return -1;
                 }
-                //PRINT_IF_NOT_SILENT(" --> added cell "<<*vc_it<<": "<<mesh_.get_cell_vertices(*vc_it)<<" to the expansion cone as cell "<<cone_cell<<", positions: "<<std::endl);
+                //PRINT_IF_NOT_SILENT(" --> added cell "<<*vc_it<<": "<<codomain_mesh_.get_cell_vertices(*vc_it)<<" to the expansion cone as cell "<<cone_cell<<", positions: "<<std::endl);
             }else{
                 //PRINT_IF_NOT_SILENT(" -- expanded count = "<<expanded_vertices_count(*vc_it)<<std::endl);
             }
@@ -3275,8 +3275,8 @@ namespace OpenVolumeMesh{
         //expanded vertices (that are not already part of the cone)
         //and the center vertex
         for(auto vf_it = mesh_.vf_iter(center_vertex); vf_it.valid(); vf_it++){
-            //auto face_vertices = mesh_.get_halfface_vertices(mesh_.halfface_handle(*vf_it, 0));
-            //PRINT_IF_NOT_SILENT(" - checking face "<<*vf_it<<": "<<mesh_.get_halfface_vertices(mesh_.halfface_handle(*vf_it, 0))<<std::endl);
+            //auto face_vertices = codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(*vf_it, 0));
+            //PRINT_IF_NOT_SILENT(" - checking face "<<*vf_it<<": "<<codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(*vf_it, 0))<<std::endl);
 
             //same comment as above regardin clusters
             if(expanded_vertices_count(*vf_it) == (2 + accumulating_cluster)){
@@ -3289,7 +3289,7 @@ namespace OpenVolumeMesh{
                     return -1;
                 }
                 /*PRINT_IF_NOT_SILENT(" --> added face "<<*vf_it<<
-                           ": "<<mesh_.get_halfface_vertices(mesh_.halfface_handle(*vf_it, 0))<<
+                           ": "<<codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(*vf_it, 0))<<
                            " to the expansion cone as face "<<cone_face<<std::endl);*/
 
             }else{
@@ -3306,7 +3306,7 @@ namespace OpenVolumeMesh{
         for(auto out_he_it: mesh_.outgoing_halfedges(center_vertex)){
 
             auto to_vertex = mesh_.to_vertex_handle(out_he_it);
-            //PRINT_IF_NOT_SILENT(" - checking edge "<<mesh_.find_halfedge(out_he_it)<<std::endl);
+            //PRINT_IF_NOT_SILENT(" - checking edge "<<codomain_mesh_.find_halfedge(out_he_it)<<std::endl);
             //PRINT_IF_NOT_SILENT(" - to vertex : "<<to_vertex<<std::endl);
            // PRINT_IF_NOT_SILENT(" - expanded : "<<expanded_prop_[to_vertex]<<std::endl);
             if(expanded_prop_[to_vertex]){
@@ -3328,7 +3328,7 @@ namespace OpenVolumeMesh{
                                                to_vertex);
 
                 if(cone_edge.idx() == -1){
-                    //PRINT_IF_NOT_SILENT(" ERROR - couldn't add edge "<<out_he_it<<": "<<mesh_.find_halfedge(out_he_it)<<" to the expansion cone"<<std::endl);
+                    //PRINT_IF_NOT_SILENT(" ERROR - couldn't add edge "<<out_he_it<<": "<<codomain_mesh_.find_halfedge(out_he_it)<<" to the expansion cone"<<std::endl);
                     return -1;
                 }
                 //PRINT_IF_NOT_SILENT(" --> added edge "<<out_he_it<<" to the expansion cone as edge "<<cone_edge<<std::endl);
@@ -3474,7 +3474,7 @@ namespace OpenVolumeMesh{
 
                 tried_spokes_count++;
 
-                //PRINT_IF_NOT_SILENT(" - testing spoke "<<mesh_.find_halfedge(spoke_edge)<<std::endl);
+                //PRINT_IF_NOT_SILENT(" - testing spoke "<<codomain_mesh_.find_halfedge(spoke_edge)<<std::endl);
 
                 //then take the neighbor edge (connecting an expanded vertex) with the most
                 //expanded tets around
@@ -3485,7 +3485,7 @@ namespace OpenVolumeMesh{
                 auto result = extract_expansion_cone_around_spoke_edge(spoke_edge,
                                                                        minimal_cone);
 
-                //PRINT_IF_NOT_SILENT(" - minimal cone around spoke "<<mesh_.find_halfedge(spoke_edge)<<
+                //PRINT_IF_NOT_SILENT(" - minimal cone around spoke "<<codomain_mesh_.find_halfedge(spoke_edge)<<
                 //           " : "<<minimal_cone<<std::endl);
 
                 //if there's no minimal cone around this spoke, we skip it
@@ -3628,7 +3628,7 @@ namespace OpenVolumeMesh{
 
             if(expanded_prop_[neighbor]){
                 //PRINT_IF_NOT_SILENT(" -----"<<std::endl);
-                //PRINT_IF_NOT_SILENT(" - checking spoke edge "<<mesh_.find_halfedge(out_he_it)<<std::endl);
+                //PRINT_IF_NOT_SILENT(" - checking spoke edge "<<codomain_mesh_.find_halfedge(out_he_it)<<std::endl);
 
                 /*auto spoke_edge = topo_helper_.halfedge_exists(center_vertex,
                                                                neighbor);
@@ -3642,19 +3642,19 @@ namespace OpenVolumeMesh{
                 }*/
 
                 //PRINT_IF_NOT_SILENT(" ----------"<<std::endl);
-                //PRINT_IF_NOT_SILENT(" - checking spoke edge "<<mesh_.find_halfedge(spoke_edge)<<" with valence "<<mesh_.valence(mesh_.edge_handle(spoke_edge))<<std::endl);
+                //PRINT_IF_NOT_SILENT(" - checking spoke edge "<<codomain_mesh_.find_halfedge(spoke_edge)<<" with valence "<<codomain_mesh_.valence(codomain_mesh_.edge_handle(spoke_edge))<<std::endl);
 
                 auto result = extract_expansion_cone_around_spoke_edge(out_he_it,
                                                                        minimal_cone);
 
-                //PRINT_IF_NOT_SILENT(" - minimal cone around spoke "<<mesh_.find_halfedge(spoke_edge)<<
+                //PRINT_IF_NOT_SILENT(" - minimal cone around spoke "<<codomain_mesh_.find_halfedge(spoke_edge)<<
                 //           " : "<<minimal_cone<<std::endl);
                 if(result == -1){
                     PRINT_IF_NOT_SILENT(" error while extracting expansion cone around spoke edge"<<std::endl);
                     return -1;
                 }
 
-                //PRINT_IF_NOT_SILENT(" - cone around spoke edge "<<mesh_.find_halfedge(out_he_it)<<": "<<minimal_cone<<std::endl);
+                //PRINT_IF_NOT_SILENT(" - cone around spoke edge "<<codomain_mesh_.find_halfedge(out_he_it)<<": "<<minimal_cone<<std::endl);
 
                 /*auto min_expandability = minimal_cone.is_expandable(center_vertex, dummy_pos);
                 if(min_expandability == -1){
@@ -3688,7 +3688,7 @@ namespace OpenVolumeMesh{
                                                            ExpansionCone& cone){
 
         //PRINT_IF_NOT_SILENT(" ------"<<std::endl);
-        //PRINT_IF_NOT_SILENT(" extracting expansion cone around spoke edge "<<mesh_.find_halfedge(spoke_edge)<<std::endl);
+        //PRINT_IF_NOT_SILENT(" extracting expansion cone around spoke edge "<<codomain_mesh_.find_halfedge(spoke_edge)<<std::endl);
         cone.clear();
 
         //to make the center vertex the first of the cone
@@ -3696,7 +3696,7 @@ namespace OpenVolumeMesh{
         cone.add_vertex(center_vertex, this->vertex(center_vertex));
 
         for(auto hec_it = mesh_.hec_iter(spoke_edge); hec_it.valid(); hec_it++){
-            //PRINT_IF_NOT_SILENT(" - checking cell "<<*hec_it<<": "<<mesh_.get_cell_vertices(*hec_it)<<std::endl);
+            //PRINT_IF_NOT_SILENT(" - checking cell "<<*hec_it<<": "<<codomain_mesh_.get_cell_vertices(*hec_it)<<std::endl);
             if(expanded_vertices_count(*hec_it) == 3){
                 //PRINT_IF_NOT_SILENT(" --> which contains 3 expanded vertices, adding it to the cone"<<std::endl);
                 add_cell_to_cone(*hec_it, cone);
@@ -3748,14 +3748,14 @@ namespace OpenVolumeMesh{
         while(!to_visit.empty()){
             auto current_cell = to_visit.front();
             to_visit.pop();
-            //PRINT_IF_NOT_SILENT(" -- current cell: "<<current_cell<<": "<<mesh_.get_cell_vertices(current_cell)<<std::endl);
+            //PRINT_IF_NOT_SILENT(" -- current cell: "<<current_cell<<": "<<codomain_mesh_.get_cell_vertices(current_cell)<<std::endl);
             visited_prop[current_cell] = true;
 
             auto current_cone = cone;
             //PRINT_IF_NOT_SILENT(" -- current cone: "<<current_cone<<std::endl);
 
             for(auto chf_it = mesh_.chf_iter(current_cell); chf_it.valid(); chf_it++){
-                //PRINT_IF_NOT_SILENT(" --- checking hf "<<*chf_it<<": "<<mesh_.get_halfface_vertices(*chf_it)<<std::endl);
+                //PRINT_IF_NOT_SILENT(" --- checking hf "<<*chf_it<<": "<<codomain_mesh_.get_halfface_vertices(*chf_it)<<std::endl);
                 auto opposite_hf = mesh_.opposite_halfface_handle(*chf_it);
                 if(opposite_hf.idx() != -1){
                     auto neighbor_cell = mesh_.incident_cell(opposite_hf);
@@ -3763,7 +3763,7 @@ namespace OpenVolumeMesh{
                     if(neighbor_cell.idx() != -1 &&
                        !visited_prop[neighbor_cell] &&
                        expanded_vertices_count(neighbor_cell) == 3){
-                        //PRINT_IF_NOT_SILENT(" ---- adding unvisited neighbor cell "<<neighbor_cell<<": "<<mesh_.get_cell_vertices(neighbor_cell)<<std::endl);
+                        //PRINT_IF_NOT_SILENT(" ---- adding unvisited neighbor cell "<<neighbor_cell<<": "<<codomain_mesh_.get_cell_vertices(neighbor_cell)<<std::endl);
                         auto cone_cell = add_cell_to_cone(neighbor_cell, current_cone);
                         if(cone_cell.idx() == -1){
                             PRINT_IF_NOT_SILENT(" ERROR - couldn't add cell "<<neighbor_cell<<" to cone"<<std::endl);
@@ -3787,7 +3787,7 @@ namespace OpenVolumeMesh{
                             to_visit.push(neighbor_cell);
                         }else if(result == EXPANDABILITY_CHECK_ERROR){
                             /*PRINT_IF_NOT_SILENT(" error while adding cell "<<neighbor_cell<<
-                                       ": "<<mesh_.get_cell_vertices(neighbor_cell)<<
+                                       ": "<<codomain_mesh_.get_cell_vertices(neighbor_cell)<<
                                        " to cone"<<std::endl);*/
                             return -1;
                         }else{
@@ -4004,7 +4004,7 @@ namespace OpenVolumeMesh{
                 }
                 return -1;
             }
-            //PRINT_IF_NOT_SILENT(" - halfedge: "<<mesh_heh<<mesh_.find_halfedge(mesh_heh)<<std::endl);
+            //PRINT_IF_NOT_SILENT(" - halfedge: "<<mesh_heh<<codomain_mesh_.find_halfedge(mesh_heh)<<std::endl);
 
             auto mesh_new_vertex = split_edge(mesh_heh);
             //PRINT_IF_NOT_SILENT(" - new mesh vertex: "<<mesh_new_vertex<<" moved to "<<vec2vec(split.new_vertex_position)<<std::endl);
@@ -4047,10 +4047,10 @@ namespace OpenVolumeMesh{
                     return -1;
                 }
 
-                //std::cout<<" --> link condition: "<<link_condition(mesh_, mesh_to_collapse_he)<<std::endl);
+                //std::cout<<" --> link condition: "<<link_condition(codomain_mesh_, mesh_to_collapse_he)<<std::endl);
 
 
-                //PRINT_IF_NOT_SILENT(" - collapsing edge "<<mesh_.find_halfedge(mesh_to_collapse_he)<<" of valence "<<mesh_.valence(mesh_.edge_handle(mesh_to_collapse_he))<<std::endl);
+                //PRINT_IF_NOT_SILENT(" - collapsing edge "<<codomain_mesh_.find_halfedge(mesh_to_collapse_he)<<" of valence "<<codomain_mesh_.valence(codomain_mesh_.edge_handle(mesh_to_collapse_he))<<std::endl);
 
                 mesh_.collapse_edge(mesh_to_collapse_he);
                 split_list_.back().cone_collapsed_to_vertex = mesh_collapsed_to_vertex;
@@ -4063,11 +4063,11 @@ namespace OpenVolumeMesh{
             }
 
             //temp check
-            /*if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+            /*if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
                 PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after applying split"<<std::endl);
-                auto bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
+                auto bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
                 for(auto flipped_tet: bad_tets.second){
-                    PRINT_IF_NOT_SILENT(" - "<<flipped_tet<<": "<<mesh_.get_cell_vertices(flipped_tet)<<std::endl);
+                    PRINT_IF_NOT_SILENT(" - "<<flipped_tet<<": "<<codomain_mesh_.get_cell_vertices(flipped_tet)<<std::endl);
                 }
                 return -1;
             }*/
@@ -4082,15 +4082,15 @@ namespace OpenVolumeMesh{
             std::vector<CellHandle> bad_cells;
             for(int i(initial_split_list_size); i<(int)split_list_.size(); i++){
                 auto mid_v = split_list_[i].cone_new_vertex;
-                if(!mesh_.is_deleted(mid_v)){
-                    for(auto vc_it = mesh_.vc_iter(mid_v); vc_it.valid(); vc_it++){
-                        auto c_vertices = mesh_.get_cell_vertices(*vc_it);
+                if(!codomain_mesh_.is_deleted(mid_v)){
+                    for(auto vc_it = codomain_mesh_.vc_iter(mid_v); vc_it.valid(); vc_it++){
+                        auto c_vertices = codomain_mesh_.get_cell_vertices(*vc_it);
                         auto unexp_count(0);
                         for(auto cv: c_vertices){
                             unexp_count += !expanded_prop_[cv];
                         }
                         if(unexp_count <= 1){
-                            if(OVMtetToCGALtet(mesh_, vertex_position_prop_, *vc_it).is_degenerate()){
+                            if(OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, *vc_it).is_degenerate()){
                                 bad_cells.push_back(*vc_it);
                             }
                         }
@@ -4105,8 +4105,8 @@ namespace OpenVolumeMesh{
 
                 if(bad_cells.size() < 50){
                     for(auto c: bad_cells){
-                        auto c_vertices = mesh_.get_cell_vertices(c);
-                        auto volume = OVMtetToCGALtet(mesh_, vertex_position_prop_, c).volume();
+                        auto c_vertices = codomain_mesh_.get_cell_vertices(c);
+                        auto volume = OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, c).volume();
                         PRINT_IF_NOT_SILENT(" -- "<<c<<": "<<c_vertices<<", volume = "<<volume<<std::endl);
                     }
                 }else{
@@ -4123,7 +4123,7 @@ namespace OpenVolumeMesh{
 #endif
 
         //temp check
-        /*if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        /*if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             std::cout<<" ERROR - mesh contains flipped tets right after split list application"<<std::endl);
             return -1;
         }*/
@@ -4161,7 +4161,7 @@ namespace OpenVolumeMesh{
         }
         collapsible_new_halfedge_prop_[second_new_he] = true;
 
-        //PRINT_IF_NOT_SILENT(" - set edges "<<first_new_he<<": "<<mesh_.find_halfedge(first_new_he)<<" and "<<second_new_he<<": "<<mesh_.find_halfedge(second_new_he)<<" as collapsible new edges"<<std::endl);
+        //PRINT_IF_NOT_SILENT(" - set edges "<<first_new_he<<": "<<codomain_mesh_.find_halfedge(first_new_he)<<" and "<<second_new_he<<": "<<codomain_mesh_.find_halfedge(second_new_he)<<" as collapsible new edges"<<std::endl);
     }
 
 
@@ -4588,10 +4588,10 @@ namespace OpenVolumeMesh{
             auto const from_v = split_list_[i].cone_from_vertex;
             auto const to_v   = split_list_[i].cone_to_vertex;
 
-            if(mesh_.is_boundary(mid_v) ||
-                    mesh_.is_deleted(mid_v) ||
-                    mesh_.is_deleted(from_v) ||
-                    mesh_.is_deleted(to_v)){
+            if(codomain_mesh_.is_boundary(mid_v) ||
+                    codomain_mesh_.is_deleted(mid_v) ||
+                    codomain_mesh_.is_deleted(from_v) ||
+                    codomain_mesh_.is_deleted(to_v)){
                 continue;
             }
             to_collapse.push_back({mid_v, from_v});
@@ -4633,7 +4633,7 @@ namespace OpenVolumeMesh{
                 if(collapsible_new_halfedge_prop_[op_he1]){
                     to_collapse.push_back({mesh_.from_vertex_handle(op_he1),
                                            mesh_.to_vertex_handle(op_he1)});
-                    //std::cout<<" - added edge "<<op_he1<<": "<<mesh_.find_halfedge(op_he1)<<" for collapse"<<std::endl);
+                    //std::cout<<" - added edge "<<op_he1<<": "<<codomain_mesh_.find_halfedge(op_he1)<<" for collapse"<<std::endl);
                     /*if(!is_candidate_prop[op_he1]){
                         std::cout<<"  --> he1 not an old candidate!"<<std::endl);
                         return -1;
@@ -4644,7 +4644,7 @@ namespace OpenVolumeMesh{
                     if(collapsible_new_halfedge_prop_[op_he2]){
                         to_collapse.push_back({mesh_.from_vertex_handle(op_he2),
                                                mesh_.to_vertex_handle(op_he2)});
-                        //std::cout<<" - added edge "<<op_he2<<": "<<mesh_.find_halfedge(op_he2)<<" for collapse"<<std::endl);
+                        //std::cout<<" - added edge "<<op_he2<<": "<<codomain_mesh_.find_halfedge(op_he2)<<" for collapse"<<std::endl);
                         /*if(!is_candidate_prop[op_he2]){
                             std::cout<<"  --> he2 not an old candidate!"<<std::endl);
                             return -1;
@@ -4727,7 +4727,7 @@ namespace OpenVolumeMesh{
                 auto const from_v = from_to_pair.first;
                 auto const to_v   = from_to_pair.second;
 
-                //std::cout<<" - trying pair "<<from_v<<" (val "<<mesh_.valence(from_v)<<"), "<<to_v<<std::endl);
+                //std::cout<<" - trying pair "<<from_v<<" (val "<<codomain_mesh_.valence(from_v)<<"), "<<to_v<<std::endl);
 
                 moved_at_last_iteration_prop[from_v] = false;
 
@@ -4737,8 +4737,8 @@ namespace OpenVolumeMesh{
                         !expanded_prop_[from_v] ||
                         !expanded_prop_[to_v]){
                     /*std::cout<<" - skipping edge ("<<from_v<<", "<<to_v<<"): "<<std::endl);
-                    std::cout<<"         - from-v is boundary: "<<mesh_.is_boundary(from_v)<<std::endl);
-                    std::cout<<"         - deleted: "<<mesh_.is_deleted(from_v)<<", "<<mesh_.is_deleted(to_v)<<std::endl);
+                    std::cout<<"         - from-v is boundary: "<<codomain_mesh_.is_boundary(from_v)<<std::endl);
+                    std::cout<<"         - deleted: "<<codomain_mesh_.is_deleted(from_v)<<", "<<codomain_mesh_.is_deleted(to_v)<<std::endl);
                     std::cout<<"         - expanded: "<<expanded_prop_[from_v]<<", "<<expanded_prop_[to_v]<<std::endl);*/
 
                     continue;
@@ -4748,7 +4748,7 @@ namespace OpenVolumeMesh{
 
                 if(mesh_.valence(from_v) == valence_at_last_iteration_prop[from_v] &&
                         !already_tried_during_this_iteration_prop[from_v]){
-                   //PRINT_IF_NOT_SILENT(" --> same valence (="<<mesh_.valence(from_v)<<") as last iteration, skipping"<<std::endl);
+                   //PRINT_IF_NOT_SILENT(" --> same valence (="<<codomain_mesh_.valence(from_v)<<") as last iteration, skipping"<<std::endl);
                     unchanged_valence_count++;
                     continue;
                 }
@@ -4801,7 +4801,7 @@ namespace OpenVolumeMesh{
                 //e.g. split edge (a-b) -> (a-c-b) and then -> (a-c-d-b),
                 //then edge (c-b) doesn't exist anymore
                 if(he.is_valid() && is_collapsible){
-                    //PRINT_IF_NOT_SILENT(" -- edge "<<mesh_.find_halfedge(he)<<" is collapsible, checking star-shape"<<std::endl);
+                    //PRINT_IF_NOT_SILENT(" -- edge "<<codomain_mesh_.find_halfedge(he)<<" is collapsible, checking star-shape"<<std::endl);
 
                     bool valid_in_domain(true);
                     //check that this is a valid collapse in the domain mesh
@@ -4879,7 +4879,7 @@ namespace OpenVolumeMesh{
                                 cone.set_vertex(cone_to_v, new_pos);
 
                                 displacement_result = 0;
-                                //std::cout<<" - checking validity for step "<<step_count<<" for edge "<<mesh_.find_halfedge(cone_he)<<std::endl);
+                                //std::cout<<" - checking validity for step "<<step_count<<" for edge "<<codomain_mesh_.find_halfedge(cone_he)<<std::endl);
                                 for(auto vc_it = cone.vc_iter(cone_to_v); vc_it.valid(); vc_it++){
                                     //PRINT_IF_NOT_SILENT(" - checking cell "<<cone.get_cell_vertices(*vc_it)<<std::endl);
                                     if(bad_tet_finder.isFlipped(*vc_it) || bad_tet_finder.isDegenerate(*vc_it)){
@@ -4934,11 +4934,11 @@ namespace OpenVolumeMesh{
                         }
 
                         if(!displacement_result){
-                            //PRINT_IF_NOT_SILENT(" --> union of 1-ring neighborhoods for he "<<mesh_.find_halfedge(he)<<" is star-shaped"<<std::endl);
+                            //PRINT_IF_NOT_SILENT(" --> union of 1-ring neighborhoods for he "<<codomain_mesh_.find_halfedge(he)<<" is star-shaped"<<std::endl);
                             mesh_.collapse_edge(he);
                             this->set_vertex(to_v, new_pos);
                             collapse_count++;
-                            //std::cout<<" --> collapsed edge  "<<mesh_.find_halfedge(he)<<std::endl);
+                            //std::cout<<" --> collapsed edge  "<<codomain_mesh_.find_halfedge(he)<<std::endl);
 
                             //split_list_[i].cone_collapsed_to_vertex = he_to_v;
                             surviving_vertex = to_v;
@@ -4954,7 +4954,7 @@ namespace OpenVolumeMesh{
 
                 if(surviving_vertex.is_valid()){
 #if ENABLE_ALL_CHECKS
-                    if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(mesh_, vertex_position_prop_, surviving_vertex)){
+                    if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(codomain_mesh_, vertex_position_prop_, surviving_vertex)){
                         PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after collapsing edge "<<from_v<<" -> "<<surviving_vertex<<std::endl);
                         return -1;
                     }
@@ -5512,7 +5512,7 @@ namespace OpenVolumeMesh{
 
 
 
-        //auto cone_to_mesh_prop = mesh_.request_vertex_property<VertexHandle>();
+        //auto cone_to_mesh_prop = codomain_mesh_.request_vertex_property<VertexHandle>();
         //the cone copy should have the right size
         auto cone_to_mesh_prop = cluster_ec_copy.request_vertex_property<VertexHandle>();
         for(int i(0); i<(int)ss_cone.n_vertices(); i++){
@@ -5535,12 +5535,12 @@ namespace OpenVolumeMesh{
         }
 
 #if ENABLE_ALL_CHECKS
-        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
             std::cout<<" ERROR - mesh contains flipped tets after applying cluster star-shapification"<<std::endl);
-            auto bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
+            auto bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
             for(auto flipped_tet: bad_tets.second){
                 std::cout<<" - "<<flipped_tet<<": "<<std::endl);
-                for(auto v: mesh_.get_cell_vertices(flipped_tet)){
+                for(auto v: codomain_mesh_.get_cell_vertices(flipped_tet)){
                     std::cout<<"  -- "<<v<<" at "<<vec2vec(vertex_position_prop_[v])<<std::endl);
                 }
             }
@@ -5827,7 +5827,7 @@ namespace OpenVolumeMesh{
                             continue;
                         }
 
-                        //std::cout<<" - setting up 1-ring for mesh vertex "<<mesh_v<<" with valence "<<mesh_.valence(mesh_v)<<std::endl);
+                        //std::cout<<" - setting up 1-ring for mesh vertex "<<mesh_v<<" with valence "<<codomain_mesh_.valence(mesh_v)<<std::endl);
                         ExpansionCone cone;
                         ExpansionCone::set_up_1_ring_neighborhood_as_expansion_cone(mesh_,
                                                                                     vertex_position_prop_,
@@ -5953,7 +5953,7 @@ namespace OpenVolumeMesh{
                 auto cone_handle = cone.mesh_to_cone_handle(neighbor);
 
                 if(cone_handle.idx() == -1){
-                    //PRINT_IF_NOT_SILENT(" -- neighbor "<<neighbor<<" is not part of cone, adding edge "<<mesh_.find_halfedge(out_he_it)<<" to split list"<<std::endl);
+                    //PRINT_IF_NOT_SILENT(" -- neighbor "<<neighbor<<" is not part of cone, adding edge "<<codomain_mesh_.find_halfedge(out_he_it)<<" to split list"<<std::endl);
 
                     spokes_to_split.push_back(out_he_it);
                 }
@@ -6031,8 +6031,8 @@ namespace OpenVolumeMesh{
 
 
         /*PRINT_IF_NOT_SILENT(" -------- expanded vertex "<<center_vertex<<" with neighbors: ";
-        for(auto out_he: mesh_.outgoing_halfedges(center_vertex)){
-            PRINT_IF_NOT_SILENT(mesh_.to_vertex_handle(out_he)<<" ";
+        for(auto out_he: codomain_mesh_.outgoing_halfedges(center_vertex)){
+            PRINT_IF_NOT_SILENT(codomain_mesh_.to_vertex_handle(out_he)<<" ";
         }
         PRINT_IF_NOT_SILENT(std::endl;*/
 
@@ -6101,7 +6101,7 @@ namespace OpenVolumeMesh{
 
             shift_factor -= byte_size;
             i++;
-        }while(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_));
+        }while(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_));
 
         this->set_vertex(center_vertex, initial_pos);
 
@@ -6158,7 +6158,7 @@ namespace OpenVolumeMesh{
         for(int i(0); i<(int)incident_cells.size(); i++){
             auto c = incident_cells[i];
             if(OVMtetToCGALtet(mesh_, vertex_position_prop_, c).is_degenerate() != incident_cells_degeneracy[i]){
-                //std::cout<<" - cell "<<c<<" was "<<(incident_cells_degeneracy[i] ? "": "non-")<<" degenerate and is now "<<OVMtetToCGALtet(mesh_, vertex_position_prop_, c).is_degenerate()<<std::endl);
+                //std::cout<<" - cell "<<c<<" was "<<(incident_cells_degeneracy[i] ? "": "non-")<<" degenerate and is now "<<OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, c).is_degenerate()<<std::endl);
                 found_change = true;
                 break;
             }
@@ -6216,7 +6216,7 @@ namespace OpenVolumeMesh{
             for(int i(0); i<(int)incident_cells.size(); i++){
                 auto c = incident_cells[i];
                 if(OVMtetToCGALtet(mesh_, vertex_position_prop_, c).is_degenerate() != incident_cells_degeneracy[i]){
-                    //std::cout<<" - cell "<<c<<" was "<<(incident_cells_degeneracy[i] ? "": "non-")<<" degenerate and is now "<<OVMtetToCGALtet(mesh_, vertex_position_prop_, c).is_degenerate()<<std::endl);
+                    //std::cout<<" - cell "<<c<<" was "<<(incident_cells_degeneracy[i] ? "": "non-")<<" degenerate and is now "<<OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, c).is_degenerate()<<std::endl);
                     found_change = true;
                     break;
                 }
@@ -6289,7 +6289,7 @@ namespace OpenVolumeMesh{
         //PRINT_IF_NOT_SILENT("  looking for minimum precision position for new tip vertex "<<tip_vertex<<" initially at "<<vec2vec(vertex(tip_vertex))<<" with binary search..."<<std::endl);
 
         auto v = new_vertex_initial_position;
-        /*if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_) ||
+        /*if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_) ||
                 cone.contains_degenerate_tets()){
             PRINT_IF_NOT_SILENT(" ERROR - integrity already not maintained with initial position"<<std::endl);
             return {0,0,0};
@@ -6301,7 +6301,7 @@ namespace OpenVolumeMesh{
         this->set_vertex(tip_vertex, current_pos);
         cone.set_vertex(cone.mesh_to_cone_handle(center_vertex), current_pos);
 
-        if(!(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_) ||
+        if(!(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_) ||
                 cone.contains_degenerate_tets())){
             PRINT_IF_NOT_SILENT(" --> double precision enough, using that"<<std::endl);
             PRINT_IF_NOT_SILENT(" ======================================================="<<std::endl);
@@ -6333,7 +6333,7 @@ namespace OpenVolumeMesh{
             cone.set_vertex(cone.mesh_to_cone_handle(center_vertex), current_pos);
 
             //if the precision is too low, we use it as lower bound
-            if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_) ||
+            if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_) ||
                     cone.contains_degenerate_tets()){
                 max_shift_factor = shift_factor;
 

@@ -89,6 +89,8 @@ bool SphereMapper::project_boundary_to_sphere(TetrahedralMesh& mesh,
 bool SphereMapper::is_boundary_star_shaped_and_non_degenerate(TetrahedralMesh mesh){
 
     auto bad_tets = BadTetFinder::findBadTets(mesh);
+    std::cout<<" - deg tets: "<<bad_tets.first.size()<<std::endl;
+    std::cout<<" - flipped tets: "<<bad_tets.second.size()<<std::endl;
 
     auto boundary_deg_triangles_count = PEHelpers::degenerate_boundary_faces_count(mesh);
 

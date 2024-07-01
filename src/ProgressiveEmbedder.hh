@@ -25,10 +25,10 @@ public:
      *  1 shrinkage failed
      *  2 expansion failed
      */
-    static int shrinkAndExpand(TetrahedralMesh& mesh,
+    static int shrinkAndExpand(TetrahedralMesh& domain_mesh,
+                               TetrahedralMesh& codomain_mesh,
                                const std::string& mesh_name,
                                const std::string& output_file_path,
-                               int boundary_mapping_method,
                                int debug_expander);
 
 
@@ -67,12 +67,12 @@ public:
 
 private:
 
-    ProgressiveEmbedder(TetrahedralMesh& mesh,
+    ProgressiveEmbedder(TetrahedralMesh& domain_mesh,
+                        TetrahedralMesh& codomain_mesh,
                         const std::string& mesh_name,
                         const std::string& output_file_path);
 
-    int shrink_and_expand(int boundary_mapping_method,
-                          int debug_expander);
+    int shrink_and_expand(int debug_expander);
 
 
     int count_interior_vertices() const;
@@ -120,8 +120,8 @@ private:
                                        const int cluster_star_shapifications_count);
 
 
-
-    TetrahedralMesh& mesh_;
+    TetrahedralMesh& domain_mesh_;
+    TetrahedralMesh& codomain_mesh_;
     const std::string mesh_name_;
     const std::string output_file_path_;
 
