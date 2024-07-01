@@ -1,6 +1,7 @@
 build/*
 Cmake-build-release/*
+build-ninja/*
 CMakeLists.txt.user
 .DS_store
 .idea/*
-External/*
+external/*
