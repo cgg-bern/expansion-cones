@@ -1,3 +1,4 @@
 build/*
+build-ninja/*
 CMakeLists.txt.user
 .DS_store
