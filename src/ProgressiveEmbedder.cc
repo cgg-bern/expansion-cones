@@ -35,17 +35,20 @@ int ProgressiveEmbedder::shrink_and_expand(int debug_expander){
         return -1;
     }
 
-std::cout<<" interior vertices positions: "<<std::endl;
-    for(auto v: codomain_mesh_.vertices()){
-        if(!codomain_mesh_.is_boundary(v)){
-            std::cout<<" - "<<v<<" at "<<codomain_mesh_.vertex(v)<<std::endl;
+    Vec3d centroid = {0,0,0};
+
+    if(!Expander::at_least_one_expanded_vertex(codomain_mesh_)){
+
+
+        std::cout<<" WARNING - USING ORIGIN AS CENTROID"<<std::endl;
+
+        for(auto v: codomain_mesh_.vertices()){
+            if(!codomain_mesh_.is_boundary(v)){
+                codomain_mesh_.set_vertex(v, centroid);
+            }
         }
-    }
-
-   if(!Expander::at_least_one_expanded_vertex(codomain_mesh_)){
-
-        SphereMapper::center_mesh(codomain_mesh_);
-        SphereMapper::map_interior_to_centroid(codomain_mesh_);
+        //SphereMapper::center_mesh(codomain_mesh_);
+        //SphereMapper::map_interior_to_centroid(codomain_mesh_);
 
         for(auto f: codomain_mesh_.faces()){
             if(codomain_mesh_.is_boundary(f)){
@@ -71,8 +74,6 @@ std::cout<<" interior vertices positions: "<<std::endl;
 
         if(!SphereMapper::is_boundary_star_shaped_and_non_degenerate(codomain_mesh_)){
             std::cout<<" ERROR - Input mesh contains degenerate boundary triangles or is not star-shaped after boundary mapping"<<std::endl;
-            IO::FileManager fm;
-            fm.writeFile("a_bad_input.ovm", codomain_mesh_);
             return -1;
         }
 
@@ -80,21 +81,6 @@ std::cout<<" interior vertices positions: "<<std::endl;
         std::cout<<" ==> MESH WAS ALREADY PARTIALLY EXPANDED, SKIPPING BOUNDARY CHECK"<<std::endl;
    }
 
-
-    auto boundary_area = SphereMapper::boundary_area(codomain_mesh_);
-    std::cout<<" WARNING - set centroid to origin"<<std::endl;
-    Vec3d centroid = {0,0,0};
-    //auto result = mesh_cone.find_max_min_volume_center(centroid, 1, boundary_area);
-
-    //centroid = {0,0,0};
-
-    for(auto v: codomain_mesh_.vertices()){
-        if(!codomain_mesh_.is_boundary(v)){
-            codomain_mesh_.set_vertex(v, centroid);
-        }
-    }
-
-    std::cout<<" - mesh centroid = "<<vec2vec(centroid)<<std::endl;
 
     if(BadTetFinder::meshContainsFlippedTets(codomain_mesh_)){
 

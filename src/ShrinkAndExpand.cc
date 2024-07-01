@@ -172,6 +172,8 @@ int main(int argc, char** argv) {
             return -1;
         }
 
+        std::cout<<" - codomain v0 pos: "<<codomain_mesh.vertex(VertexHandle(0))<<std::endl;
+
         TetMeshBoundarySplitter::preProcessProblematicRegions(domain_mesh);
         TetMeshBoundarySplitter::preProcessProblematicRegions(codomain_mesh);
 
