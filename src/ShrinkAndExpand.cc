@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
         int result = ProgressiveEmbedder::shrinkAndExpand(domain_mesh,
                                                  codomain_mesh,
                                                           filename,
-                                                          directory+"/"+filename+"_expansion_data.json",
+                                                          directory+"/"+filename+"expansion_data.json",
                                                           option == 1);
 
 
