@@ -31,13 +31,16 @@ void export_input_and_output_for_FOF_and_TLC_comparison(std::string location,
 
 
 void print_usage(){
-    std::cerr<<" EXPECTED USAGE: ShrinkAndExpand [input_mesh] [output_mesh] [function_index] [boundary_mapping] [option]"<<std::endl;
+    std::cerr<<" EXPECTED USAGE: ShrinkAndExpand [input_mesh] [output_file] [function_index] [boundary_mapping] [option]"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
     std::cout<<"   [input_mesh] the input (domain) mesh in .ovm format"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
-    std::cout<<"   [output_mesh] the output mesh in .ovm format. "<<std::endl;
-    std::cout<<"         In case function_index is 0, the executable will also generate .json file containing some expansion stats at the same location"<<std::endl;
+    std::cout<<"   [output_file] the output mesh in .ovm format. "<<std::endl;
+    std::cout<<"   for function_index = 0, the path to the fully mapped mesh corresponding to the boundary condition given by boundary_mapping."<<std::endl;
     std::cout<<"         The domain position of the domain (including its vertices created by potential splits) will be stored as a property of the output mesh"<<std::endl;
+    std::cout<<"         It will also generate a .json file containing some expansion stats at the same location"<<std::endl;
+    std::cout<<"   for function_index = 1:"<<std::endl;
+    std::cout<<"         The path to the boundary condition file, containing a list of vertex indices and their codomain position"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
     std::cout<<"   with [function_index] in:"<<std::endl;
     std::cout<<"        0 - shrink-and-expand method "<<std::endl;
@@ -45,7 +48,7 @@ void print_usage(){
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
     std::cout<<"   [boundary_mapping]: "<<std::endl;
     std::cout<<"   for function_index = 0:"<<std::endl;
-    std::cout<<"       path to a .ovm mesh with prescribed boundary positions or a text file with the per-vertex positions (see documentation)"<<std::endl;
+    std::cout<<"       path to a .txt file with the prescribed boundary positions"<<std::endl;
     std::cout<<"       IMPORTANT NOTE: those boundary conditions should be set such that the origin is inside the kernel"<<std::endl;
     std::cout<<"   for function_index = 1:"<<std::endl;
     std::cout<<"        1 - tetrahedral boundary"<<std::endl;
@@ -299,7 +302,7 @@ int main(int argc, char** argv) {
                                                                   result_mesh);
 
             }else{
-                if(option == 1){
+                /*if(option == 1){
                     std::cout<<" copying input "<<std::endl;
 
                     write_mesh(input_mesh_path,
@@ -311,7 +314,15 @@ int main(int argc, char** argv) {
                 write_mesh(output_mesh_path,
                            output_sub_directory,
                            result_mesh,
-                           output_sub_directory);
+                           output_sub_directory);*/
+                std::ofstream output(output_mesh_path);
+                for(auto v: result_mesh.vertices()){
+                    if(result_mesh.is_boundary(v)){
+                        auto pos = result_mesh.vertex(v);
+                        output<<v.idx()<<std::setprecision(100)<<" "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<std::endl;
+                    }
+                }
+                output.close();
             }
             break;
         }
