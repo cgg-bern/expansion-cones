@@ -49,6 +49,7 @@ void print_usage(){
     std::cout<<"        2 - stiff tetrahedral boundary"<<std::endl;
     std::cout<<"        3 - tetrahedral boundary then spherical projection"<<std::endl;
     std::cout<<"        4 - random star-shaped boundary"<<std::endl;
+    std::cout<<"    NOTE: the boundary map also splits the chord edges and faces (those whose vertices are boundary but themselves are interior)"<<std::endl;
     std::cout<<"   ---------------------------------------------------- "<<std::endl;
     std::cout<<"   [option] "<<std::endl;
     std::cout<<"   for function_index = 0:"<<std::endl;
@@ -216,7 +217,7 @@ int main(int argc, char** argv) {
         case 1:{
             result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_tet,
                                                         std::string(input_mesh_path.c_str()),
-                                                        false,
+                                                        true,
                                                         input_mesh,
                                                         result_mesh);
             //output_sub_directory = "tet_mapped";
@@ -225,7 +226,7 @@ int main(int argc, char** argv) {
         case 2:{
             result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_stiff_unit_tet,
                                                         std::string(input_mesh_path.c_str()),
-                                                        false,
+                                                        true,
                                                         input_mesh,
                                                         result_mesh);
             //output_sub_directory = "stiff_tet_mapped";
@@ -234,7 +235,7 @@ int main(int argc, char** argv) {
         case 3:{
             result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_unit_ball_using_tet,
                                                         std::string(input_mesh_path.c_str()),
-                                                        false,
+                                                        true,
                                                         input_mesh,
                                                         result_mesh);
             //output_sub_directory = "ball_mapped";
@@ -243,7 +244,7 @@ int main(int argc, char** argv) {
         case 4:{
             result = BatchProcessor::collapseSingleMesh(ProgressiveEmbedder::map_to_random_star_shape_using_tet,
                                                         std::string(input_mesh_path.c_str()),
-                                                        false,
+                                                        true,
                                                         input_mesh,
                                                         result_mesh);
             //output_sub_directory = "random_star_shape_mapped";
