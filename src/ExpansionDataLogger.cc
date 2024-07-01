@@ -212,7 +212,7 @@ bool ExpansionDataLogger::write_data_to_file(const std::string& output_file_path
 
 
 
-    std::ofstream iteration_time_output_file;
+    /*std::ofstream iteration_time_output_file;
     iteration_time_output_file.open(output_file_path+".iterations.txt");
     if(!iteration_time_output_file.is_open()){
         std::cout<<" ERROR - couldn't open file "<<(output_file_path+".iterations.txt")<<std::endl;
@@ -222,7 +222,7 @@ bool ExpansionDataLogger::write_data_to_file(const std::string& output_file_path
         iteration_time_output_file<<it_time<<" ";
     }
     iteration_time_output_file<<std::endl;
-    iteration_time_output_file.close();
+    iteration_time_output_file.close();*/
 
     return true;
 }

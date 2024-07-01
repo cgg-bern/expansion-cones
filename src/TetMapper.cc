@@ -77,7 +77,7 @@ TetMapper::TetMapper(TetrahedralMesh& mesh,
     tet_corner_prop_(mesh_.request_vertex_property<bool>()),
     tet_edge_prop_(mesh_.request_vertex_property<bool>()),
     tet_face_prop_(mesh_.request_vertex_property<bool>())
-    //tet_edge_edge_prop_(mesh_.request_edge_property<bool>())
+    //tet_edge_edge_prop_(codomain_mesh_.request_edge_property<bool>())
 {}
 
 
@@ -138,7 +138,7 @@ bool TetMapper::embed_and_map_to_tet_edges(bool restrict_single_triangle_tet_fac
         tet_corners_.push_back(corner);
         mesh_.set_vertex(corner, tet_corners_positions_[i]);
 
-        //std::cout<<" - corner "<<i<<" is "<<corner<<" at "<<mesh_.vertex(corner)<<", boundary: "<<mesh_.is_boundary(corner)<<std::endl;
+        //std::cout<<" - corner "<<i<<" is "<<corner<<" at "<<codomain_mesh_.vertex(corner)<<", boundary: "<<codomain_mesh_.is_boundary(corner)<<std::endl;
 
         for(auto j(0); j<i; j++){
             if(!find_edge_between_corners(i, j)){
@@ -288,7 +288,7 @@ bool TetMapper::embed_and_map_to_tet_faces(){
 
             for(auto v: face_vertices){
                 tet_face_prop_[v] = i+1;
-                //mesh_.set_vertex(v, {0.25,0.25,0.25});
+                //codomain_mesh_.set_vertex(v, {0.25,0.25,0.25});
             }
 
         }else{
@@ -309,8 +309,8 @@ void TetMapper::find_next_face(std::vector<VertexHandle>& face_vertices){
 
     //first, find a boundary vertex that is not embedded on the tet yet
     VertexHandle seed(-1);
-    for(auto v: mesh_.vertices()){
-        if(mesh_.is_boundary(v) &&
+    for(auto v: codomain_mesh_.vertices()){
+        if(codomain_mesh_.is_boundary(v) &&
                 !is_tet_embedded(v)){
             std::cout<<" - found face seed "<<v<<std::endl;
             seed = v;
@@ -325,29 +325,29 @@ void TetMapper::find_next_face(std::vector<VertexHandle>& face_vertices){
 
 
     std::queue<FaceHandle> to_visit;
-    auto visited_prop = mesh_.request_face_property<bool>();
-    for(auto vf_it = mesh_.vf_iter(seed); vf_it.valid(); vf_it++){
-        if(mesh_.is_boundary(*vf_it)){
+    auto visited_prop = codomain_mesh_.request_face_property<bool>();
+    for(auto vf_it = codomain_mesh_.vf_iter(seed); vf_it.valid(); vf_it++){
+        if(codomain_mesh_.is_boundary(*vf_it)){
             visited_prop[*vf_it] = true;
             to_visit.push(*vf_it);
         }
     }
 
-    auto added_prop = mesh_.request_vertex_property<bool>();
+    auto added_prop = codomain_mesh_.request_vertex_property<bool>();
 
     int i = 0;
-    while(!to_visit.empty() && i < mesh_.n_faces()){
+    while(!to_visit.empty() && i < codomain_mesh_.n_faces()){
 
         std::cout<<" ---------------------"<<std::endl;
         auto f = to_visit.front();
         to_visit.pop();
 
-        std::cout<<" - visiting face "<<f<<": "<<mesh_.get_halfface_vertices(mesh_.halfface_handle(f, 0))<<std::endl;
+        std::cout<<" - visiting face "<<f<<": "<<codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(f, 0))<<std::endl;
 
         //adding the current face's vertices
-        for(auto fv_it = mesh_.fv_iter(f); fv_it.valid(); fv_it++){
+        for(auto fv_it = codomain_mesh_.fv_iter(f); fv_it.valid(); fv_it++){
             std::cout<<" -- checking vertex "<<(*fv_it)<<std::endl;
-            if(mesh_.is_boundary(*fv_it) &&
+            if(codomain_mesh_.is_boundary(*fv_it) &&
                     !added_prop[*fv_it] &&
                     !is_tet_embedded(*fv_it)){
                 face_vertices.push_back(*fv_it);
@@ -360,16 +360,16 @@ void TetMapper::find_next_face(std::vector<VertexHandle>& face_vertices){
         //std::cout<<" - incident face to vertex "<<v<<std::endl;
 
         //and setting up the neighboring faces for visitation
-        for(auto fe_it = mesh_.fe_iter(f); fe_it.valid(); fe_it++){
-            auto from_v = mesh_.edge(*fe_it).from_vertex();
-            auto   to_v = mesh_.edge(*fe_it).to_vertex();
+        for(auto fe_it = codomain_mesh_.fe_iter(f); fe_it.valid(); fe_it++){
+            auto from_v = codomain_mesh_.edge(*fe_it).from_vertex();
+            auto   to_v = codomain_mesh_.edge(*fe_it).to_vertex();
 
-            std::cout<<" -- checking edge "<<mesh_.edge(*fe_it)<<", tet-embedded: "<<is_tet_embedded(from_v)<<"/"<<is_tet_embedded(to_v)<<std::endl;
+            std::cout<<" -- checking edge "<<codomain_mesh_.edge(*fe_it)<<", tet-embedded: "<<is_tet_embedded(from_v)<<"/"<<is_tet_embedded(to_v)<<std::endl;
 
             /*if(!tet_edge_edge_prop_[*fe_it]){
-                for(auto ef_it = mesh_.ef_iter(*fe_it); ef_it.valid(); ef_it++){
-                    std::cout<<" --- checking neighbor face "<<mesh_.get_halfface_vertices(mesh_.halfface_handle(*ef_it, 0))<<std::endl;
-                    if(mesh_.is_boundary(*ef_it) &&
+                for(auto ef_it = codomain_mesh_.ef_iter(*fe_it); ef_it.valid(); ef_it++){
+                    std::cout<<" --- checking neighbor face "<<codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(*ef_it, 0))<<std::endl;
+                    if(codomain_mesh_.is_boundary(*ef_it) &&
                             *ef_it != f &&
                             !visited_prop[*ef_it]){
 
@@ -446,7 +446,7 @@ bool TetMapper::map_to_tet_faces(const std::vector<VertexHandle>& free_vertices)
                         cube_edge_property_[neighbor] == surrounding_edge_indices[3]  ||
                         cube_corner_property_[neighbor] >= 0*/){
 
-                    //std::cout<<" added to coeff sum : "<<mesh_.vertex(neighbor)[free_coordinate_x]<<", "<<mesh_.vertex(neighbor)[free_coordinate_y]<<std::endl;
+                    //std::cout<<" added to coeff sum : "<<codomain_mesh_.vertex(neighbor)[free_coordinate_x]<<", "<<codomain_mesh_.vertex(neighbor)[free_coordinate_y]<<std::endl;
 
                     coeff_x += mesh_.vertex(neighbor)[0];
                     coeff_y += mesh_.vertex(neighbor)[1];
@@ -509,7 +509,7 @@ bool TetMapper::map_to_tet_faces(const std::vector<VertexHandle>& free_vertices)
     std::cout<<"y size : "<<y.size()<<std::endl;*/
 
     //taking the fixed coordinate of one vertex of one of the surrounding edges
-    //double fixed_coordinate_value = mesh_.vertex(cube_edges_vertices_[surrounding_edge_indices[0]][0])[fixed_coordinate];
+    //double fixed_coordinate_value = codomain_mesh_.vertex(cube_edges_vertices_[surrounding_edge_indices[0]][0])[fixed_coordinate];
 
     //std::cout<<"fixed coordinate value : "<<fixed_coordinate_value<<std::endl;
 
@@ -631,7 +631,7 @@ bool TetMapper::shortest_geodesic_path(VertexHandle source,
 
     Vertex step = previous[target];
 
-    //tet_edge_edge_prop_[mesh_.edge_handle(mesh_.halfedge(target, step))];
+    //tet_edge_edge_prop_[codomain_mesh_.edge_handle(codomain_mesh_.halfedge(target, step))];
 
 #warning that's where it fails for the furch ball sometimes
     while(step != source){
@@ -640,14 +640,14 @@ bool TetMapper::shortest_geodesic_path(VertexHandle source,
             return false;
         }
 
-        //tet_edge_edge_prop_[mesh_.edge_handle(mesh_.halfedge(step, previous[step]))];
+        //tet_edge_edge_prop_[codomain_mesh_.edge_handle(codomain_mesh_.halfedge(step, previous[step]))];
 
         path.push_back(step);
         step = previous[step];
 
     }
 
-    //tet_edge_edge_prop_[mesh_.edge_handle(mesh_.halfedge(source, path.back()))];
+    //tet_edge_edge_prop_[codomain_mesh_.edge_handle(codomain_mesh_.halfedge(source, path.back()))];
 
     //std::cout<<" SET PATH."<<std::endl;
 

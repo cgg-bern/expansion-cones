@@ -1273,7 +1273,7 @@ namespace OpenVolumeMesh{
             for(auto v: get_vertices(hf)){
                 std::cout<<" -- "<<v<<
                            " at "<<vec2vec(this->vertex(v))<<
-                           " boundary: "<<mesh_.is_boundary(v)<<
+                           " boundary: "<<codomain_mesh_.is_boundary(v)<<
                            " expanded: "<<expanded_prop_[v]<<std::endl;
             }*/
 

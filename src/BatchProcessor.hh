@@ -22,21 +22,19 @@ public:
 
     using MeshProcessingFunctionWithFileOutput =  int (*)(TetrahedralMesh&, const std::string& mesh_name, const std::string& output_file_path, int option1, int option2);
 
-    static int collapseSingleMesh(MeshProcessingFunction function,
-                                  std::string filename,
-                                  bool pre_process,
-                                  TetrahedralMesh& input_mesh,
-                                  TetrahedralMesh& result_mesh);
+    static int generate_boundary_conditions(MeshProcessingFunction function,
+                                            std::string filename,
+                                            bool pre_process,
+                                            TetrahedralMesh& input_mesh,
+                                            TetrahedralMesh& result_mesh);
 
-    static int collapseSingleMesh(MeshProcessingFunctionWithFileOutput function,
-                                  std::string filename,
-                                  bool pre_process,
-                                  int option1,
-                                  int option2,
-                                  TetrahedralMesh& input_mesh,
-                                  TetrahedralMesh& result_mesh,
-                                  const std::string& mesh_name,
-                                  const std::string& output_file_path);
+    static int shrink_and_expand(std::string mesh_file_path,
+                                 bool pre_process,
+                                 int option2,
+                                 TetrahedralMesh& input_mesh,
+                                 TetrahedralMesh& result_mesh,
+                                 const std::string& mesh_name,
+                                 const std::string& output_file_path);
 
 };
 

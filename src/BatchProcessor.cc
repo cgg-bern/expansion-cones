@@ -6,20 +6,19 @@ using Mesh = TetrahedralMesh;
 
 
 
-#warning TODO: rename this for something like "processSingleMesh" and maybe make it a template with the other one ?
-int BatchProcessor::collapseSingleMesh(MeshProcessingFunction function,
-                                       std::string mesh_file_path,
-                                       bool pre_process,
-                                       TetrahedralMesh& input_mesh,
-                                       TetrahedralMesh& result_mesh){
+int BatchProcessor::generate_boundary_conditions(MeshProcessingFunction function,
+                                                 std::string filename,
+                                                 bool pre_process,
+                                                 TetrahedralMesh& input_mesh,
+                                                 TetrahedralMesh& result_mesh){
 
     Mesh mesh;
     //int mesh;
     OpenVolumeMesh::IO::FileManager fileManager;
     //std::cout<<" READING MESH "<<filename.toStdString()<<"..."<<std::endl;
-    auto file_read_status = fileManager.readFile(mesh_file_path, mesh);
+    auto file_read_status = fileManager.readFile(filename, mesh);
     if(!file_read_status){
-        std::cout<<" couldn't load mesh "<<mesh_file_path<<std::endl;
+        std::cout << " couldn't load mesh " << filename << std::endl;
         return -1;
     }
 
@@ -66,16 +65,15 @@ int BatchProcessor::collapseSingleMesh(MeshProcessingFunction function,
 }
 
 
-#warning TODO: rename this for something like "processSingleMesh"
-int BatchProcessor::collapseSingleMesh(MeshProcessingFunctionWithFileOutput function,
-                                       std::string mesh_file_path,
-                                       bool pre_process,
-                                       int option1,
-                                       int option2,
-                                       TetrahedralMesh& input_mesh,
-                                       TetrahedralMesh& result_mesh,
-                                       const std::string& mesh_name,
-                                       const std::string& output_file_path){
+#if 0
+int BatchProcessor::shrink_and_expand(std::string mesh_file_path,
+                                      bool pre_process,
+                                      int option1,
+                                      int option2,
+                                      TetrahedralMesh& input_mesh,
+                                      TetrahedralMesh& result_mesh,
+                                      const std::string& mesh_name,
+                                      const std::string& output_file_path){
 
     Mesh mesh;
     //int mesh;
@@ -115,6 +113,7 @@ int BatchProcessor::collapseSingleMesh(MeshProcessingFunctionWithFileOutput func
 
     return result;
 }
+#endif
 
 
 
