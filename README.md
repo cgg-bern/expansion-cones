@@ -1,6 +1,6 @@
 # Expansion Cones: A Progressive Volumetric Mapping Framework
 
-[Valentin Z. NIGOLIAN](https://cgg.unibe.ch/), [Marcel CAMPEN](http://graphics.cs.uos.de/), [David BOMMES](https://cgg.unibe.ch/)
+[Valentin Z. NIGOLIAN](https://cgg.unibe.ch/) (valentin.nigolian@gmail.com), [Marcel CAMPEN](http://graphics.cs.uos.de/), [David BOMMES](https://cgg.unibe.ch/)
 ACM Transaction on Graphics (Proceedings of SIGGRAPH 2023)
 
 ![](cover-picture.png)
