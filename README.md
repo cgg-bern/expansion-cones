@@ -32,13 +32,10 @@ Our conclusions include that while this algorithm is only of limited immediate p
 `expansion-cones` uses `cmake` for compilation.
 
 ### Requirements
-This project assumes that the following libraries are installed on your machine and can be found with  `find_package`
+This project assumes that [CGAL](https://www.cgal.org/) (used for LP-solving and rational numbers representation) is installed on your machine and can be found with  `find_package`
 
-* [CGAL](https://www.cgal.org/), for LP-solving and rational numbers representation
-* [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page)
-
-It also relies on [OpenVolumeMesh](https://www.graphics.rwth-aachen.de/software/openvolumemesh/) for everything mesh-related.
-OVM is downloaded and integrated into the project with cmake's `FetchContent` command so no need to pre-install it.
+It also relies on [OpenVolumeMesh](https://www.graphics.rwth-aachen.de/software/openvolumemesh/) for everything mesh-related and [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page) because, well, it's Eigen.
+Both of those are downloaded and integrated into the project with cmake's `FetchContent` command so no need to pre-install them.
 
 ## Usage
 
@@ -50,18 +47,37 @@ Where `function_index` defines the main behaviour of the executable. If it's 0, 
 
 The parameters have different meaning depending on `function_index`, as described below:
 
-|  name          |   description   |                     `function_index`=0                                                                                                               |  `function_index`=1   |
-|----------------|---------------|--------------------------------------------------------------------|-----------------------------|
-|  `input_mesh`  | Your domain `.ovm` mesh to map. To obtain a `.ovm`(OpenVolumeMesh) file, you can convert your mesh using Martin Heistermann's [fork]( https://github.com/mheistermann/meshio) of [meshio](https://pypi.org/project/meshio/) ||
-| `boundary_mapping`  | Defines the map's boundary conditions | A `.txt` file containing the per-boundary-vertex prescribed codomain positions. | A single digit as follows. 1: Tetrahedral boundary, 2: Stiff Tetrahedral boundary, 3: Spherical boundary, 4: Random Star-shaped boundary (see paper for details)  | 
-|  `output_file`  | Output of the executable. |  The codomain mesh mapped by Shrink-and-Expand, matching the boundary conditions given as argument. (see below for details). It also creates a `.json`  file in the same directory, containing data on the expansion process  | The path to a `.txt` file containing the boundary conditions corresponding to the given boundary type |
-| `option`  | Function-dependent option (0 by default). Please run `ShrinkAndExpand` without any argument for details.|
+|  name          | description                                                                                                                                                                                                                 | `function_index`=0                                                                                                                                                                                                          | `function_index`=1                                                                                                                                               |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|  `input_mesh`   <td colspan=3>  Your domain `.ovm` mesh to map.  To obtain a `.ovm`(OpenVolumeMesh) file, you can convert your mesh using Martin Heistermann's [fork]( https://github.com/mheistermann/meshio) of [meshio](https://pypi.org/project/meshio/)                  |
+| `boundary_mapping`  | Defines the map's boundary conditions                                                                                                                                                                                       | A `.txt` file containing the per-boundary-vertex prescribed codomain positions.                                                                                                                                             | A single digit as follows. 1: Tetrahedral boundary, 2: Stiff Tetrahedral boundary, 3: Spherical boundary, 4: Random Star-shaped boundary (see paper for details) | 
+|  `output_file`  | Output of the executable.                                                                                                                                                                                                   | The codomain mesh mapped by Shrink-and-Expand, matching the boundary conditions given as argument. (see below for details). It also creates a `.json`  file in the same directory, containing data on the expansion process | The path to a `.txt` file containing the boundary conditions corresponding to the given boundary type                                                            |
+| `option`   <td colspan=3>  Function-dependent option (0 by default). Please run `ShrinkAndExpand` without any argument for details.                                                                                                                    |                                                                                                                                                                                                                             |                                                                                                                                                                  |
 
 More information can be found by running `ShrinkAndExpand` without any argument.
 
 ### Boundary Conditions
 
+The boundary conditions are generated (and read) as `.txt` files structured as follows:
+```` 
+v0 pos0x pos0y pos0z 
+v1 pos1x pos1y pos1z
+:
+vn posNx posNy posNz
+````
+Where `v0, v1,... vN` are the indices of the boundary vertices of the mesh. 
+
+Note that my parser for those files is not very robust so don't throw any garbage in there!
+
+
 ### Codomain Mesh Output
+
+The codomain mesh generated by the `ShrinkAndExpand` executable is stored in the .ovm format, with its domain and codomain positions stored as OVM [properties](https://www.graphics.rwth-aachen.de/media/openvolumemesh_static/Documentation/OpenVolumeMesh-Doc-Latest/concepts.html#generic_properties).
+The `.ovm` file basically contains a list of per-vertex (domain and codomain) positions, each stored as a single string
+You can look at how those strings are parsed in [my code](https://github.com/cgg-bern/expansion-cones/blob/c41b15313375857089f9f372880558a1a6087bfd/src/ProgEmbeddingHelpers.cc#L141) in case you need it to parse it yourself.
+
+In addition to the ccodomain mesh, the executable generates a `.json` files containing a bunch of information on how the Shrink-and-Expand process went.
+It would probably be too long to explain everything here so if you're interested, don't hesitate to write me an e-mail.
 
 
 

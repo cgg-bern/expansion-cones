@@ -16,9 +16,26 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 set (CMAKE_BUILD_TYPE Release)
 
+#old version
 #find_package (OpenVolumeMesh REQUIRED NO_MODULE)
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package (CGAL REQUIRED NO_MODULE)
+
+if(NOT TARGET Eigen3::Eigen)
+    FetchContent_Declare(eigen
+            #GIT_REPOSITORY https://gitlab.com/libeigen/eigen
+            #GIT_TAG 3.4.0
+            # temporary fix, 2025-01-16: Martin Heistermann's MR is not merged yet, but is required to fix a build error:
+            GIT_REPOSITORY https://gitlab.com/mheistermann/eigen
+            GIT_TAG fix/spqr-index-vs-storageindex
+            SOURCE_DIR "${EXTERNAL_DIR}/eigen"
+    )
+    FetchContent_Populate(eigen)
+    message("Downloaded Eigen3 to ${eigen_SOURCE_DIR}")
+    add_library(Eigen3::Eigen INTERFACE IMPORTED)
+    target_include_directories(Eigen3::Eigen INTERFACE "$<BUILD_INTERFACE:${eigen_SOURCE_DIR}>")
+    #target_compile_definitions(Eigen3::Eigen INTERFACE -DEIGEN_HAS_STD_RESULT_OF=0)
+endif()
 
 if(NOT TARGET OpenVolumeMesh::OpenVolumeMesh)
     FetchContent_Declare(openvolumemesh
