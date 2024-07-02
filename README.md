@@ -79,6 +79,10 @@ You can look at how those strings are parsed in [my code](https://github.com/cgg
 In addition to the ccodomain mesh, the executable generates a `.json` files containing a bunch of information on how the Shrink-and-Expand process went.
 It would probably be too long to explain everything here so if you're interested, don't hesitate to write me an e-mail.
 
+## Extending the Code
+This method is arguably pretty complex and so is its implementation. 
+If you are interested in extending the framework and/or experimenting with it but feel lost, don't hesitate to drop me a line!
+
 
 
 
