@@ -11,7 +11,7 @@ until no cluster remains, all tetrahedron images obtain positive volume, yieldin
 obtain the necessary degrees of freedom. A key invariant is that the intermediate maps never invert any tetrahedron
 
 [`Project Page`](https://www.algohex.eu/publications/expansion-cones/)
-[`Dataset`](todo)
+[`Dataset`](https://zenodo.org/records/8304643)
 [![DOI](https://zenodo.org/badge/634807458.svg)](https://zenodo.org/doi/10.5281/zenodo.10039967)
 
 ## Abstract
