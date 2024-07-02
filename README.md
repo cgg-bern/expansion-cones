@@ -32,31 +32,37 @@ Our conclusions include that while this algorithm is only of limited immediate p
 `expansion-cones` uses `cmake` for compilation.
 
 ### Requirements
-This project relies on the following libraries:
+This project assumes that the following libraries are installed on your machine and can be found with  `find_package`
 
 * [CGAL](https://www.cgal.org/), for LP-solving and rational numbers representation
-* [OpenVolumeMesh](https://www.graphics.rwth-aachen.de/software/openvolumemesh/), for everything mesh-related
 * [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page)
 
-Make sure to install those in a way that `cmake` can find them with `find_package`
+It also relies on [OpenVolumeMesh](https://www.graphics.rwth-aachen.de/software/openvolumemesh/) for everything mesh-related.
+OVM is downloaded and integrated into the project with cmake's `FetchContent` command so no need to pre-install it.
 
 ## Usage
 
-The project generates an executable called `ShrinkAndExpand`. Its typical usage is:
+The project generates an executable called `ShrinkAndExpand`. Its usage is:
 
-    ./ShrinkAndExpand [input_mesh] [output_location] [function_index] [boundary_mapping] [option]
+    ./ShrinkAndExpand [domain_mesh] [output_file] [function_index] [boundary_mapping] [option]
+    
+Where `function_index` defines the main behaviour of the executable. If it's 0, it runs the Shrink-and-Expand method on the given input. If it's 1, it generates the boundary conditions described in the ''Dataset'' section of the paper.
 
-Where the parameters are as follows:
+The parameters have different meaning depending on `function_index`, as described below:
 
-|  name          |  comments                                                                                                                                      |
-|----------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-|  `input_mesh`  | Your input `.ovm` mesh to map. To obtain a `.ovm`(OpenVolumeMesh) file, you can convert your mesh using Martin Heistermann's [fork]( https://github.com/mheistermann/meshio) of [meshio](https://pypi.org/project/meshio/)  |
-|  `output_location`  | Output _directory_ for the mapped mesh, in `.ovm` format as well. This also creates a `.json` containing data on the expansion process  |
-| `function_index`  | Either 0 for the Shrink-and-Expand process, or 1 to only map the boundary of the mesh (can be used to compare with other methods) |
-| `boundary_mapping`  | Defines the map's boundary conditions. 1: Tetrahedral boundary, 2: Stiff Tetrahedral boundary, 3: Spherical boundary, 4: Random Star-shaped boundary (see paper for details)  | 
+|  name          |   description   |                     `function_index`=0                                                                                                               |  `function_index`=1   |
+|----------------|---------------|--------------------------------------------------------------------|-----------------------------|
+|  `input_mesh`  | Your domain `.ovm` mesh to map. To obtain a `.ovm`(OpenVolumeMesh) file, you can convert your mesh using Martin Heistermann's [fork]( https://github.com/mheistermann/meshio) of [meshio](https://pypi.org/project/meshio/) ||
+| `boundary_mapping`  | Defines the map's boundary conditions | A `.txt` file containing the per-boundary-vertex prescribed codomain positions. | A single digit as follows. 1: Tetrahedral boundary, 2: Stiff Tetrahedral boundary, 3: Spherical boundary, 4: Random Star-shaped boundary (see paper for details)  | 
+|  `output_file`  | Output of the executable. |  The codomain mesh mapped by Shrink-and-Expand, matching the boundary conditions given as argument. (see below for details). It also creates a `.json`  file in the same directory, containing data on the expansion process  | The path to a `.txt` file containing the boundary conditions corresponding to the given boundary type |
 | `option`  | Function-dependent option (0 by default). Please run `ShrinkAndExpand` without any argument for details.|
 
 More information can be found by running `ShrinkAndExpand` without any argument.
+
+### Boundary Conditions
+
+### Codomain Mesh Output
+
 
 
 
