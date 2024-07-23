@@ -49,7 +49,8 @@ void print_usage(){
     std::cout<<"   [boundary_mapping]: "<<std::endl;
     std::cout<<"   for function_index = 0:"<<std::endl;
     std::cout<<"       path to a .txt file with the prescribed boundary positions"<<std::endl;
-    std::cout<<"       IMPORTANT NOTE: those boundary conditions should be set such that the origin is inside the kernel"<<std::endl;
+    std::cout<<"       IMPORTANT NOTE: those boundary conditions should be set such that the origin is STRICTLY inside the kernel"<<std::endl;
+    std::cout<<"                       If this is not the case, the Chebyshev center will be used as fall-back centroid for the interior vertices."<<std::endl;
     std::cout<<"   for function_index = 1:"<<std::endl;
     std::cout<<"        1 - tetrahedral boundary"<<std::endl;
     std::cout<<"        2 - stiff tetrahedral boundary"<<std::endl;
