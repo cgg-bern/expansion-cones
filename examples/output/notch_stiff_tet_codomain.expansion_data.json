@@ -17,7 +17,7 @@
 "n_LPs_solved": -1,
 "n_back_up_positions": -1,
 "n_skipped_flipped_tet_edges": -1,
-"expansion_time_s": 0.734,
+"expansion_time_s": 0.764,
 "expansion_result": 0,
 "n_vertices_after_expansion": 502,
 "n_edges_after_expansion": 2639,

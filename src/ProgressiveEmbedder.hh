@@ -86,8 +86,10 @@ private:
 
     bool is_interior(const EdgeHandle& eh) const;
 
+    bool is_codomain_boundary_valid() const;
 
-    //------ JSON export stuff
+
+        //------ JSON export stuff
     using JsonExporter = LightWeightJsonExporter<std::stringstream>;
 
     /**

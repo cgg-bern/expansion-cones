@@ -26,6 +26,45 @@ int ProgressiveEmbedder::shrinkAndExpand(TetrahedralMesh& domain_mesh,
 
 }
 
+bool ProgressiveEmbedder::is_codomain_boundary_valid() const {
+    bool boundary_ok(true);
+    for(auto f: codomain_mesh_.faces()){
+        if(codomain_mesh_.is_boundary(f)){
+            auto f_vertices = codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(f, 0));
+            auto tri = CGAL_Triangle3(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
+                                      OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
+                                      OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])));
+
+            if(CGAL::collinear(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
+                               OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
+                               OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])))){
+                std::cout<<" --> input boundary face "<<f<<": "<<f_vertices<<" is collinear "<<std::endl;
+                //return -1;
+                boundary_ok = false;
+            }
+
+            auto op_v = codomain_mesh_.halfface_opposite_vertex(codomain_mesh_.halfface_handle(f, 0));
+            if(!op_v.is_valid()){
+                op_v = codomain_mesh_.halfface_opposite_vertex(codomain_mesh_.halfface_handle(f, 1));
+            }
+            if(CGAL::coplanar(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
+                              OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
+                              OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])),
+                              OVMvec3ToCGALPoint3(codomain_mesh_.vertex(op_v)))){
+                std::cout<<" --> input boundary face "<<f<<": "<<f_vertices<<" is coplanar with cluster "<<std::endl;
+                boundary_ok = false;
+                //return -1;
+
+            }
+
+            /*if(tri.is_degenerate()){
+                std::cout<<" --> input boundary face "<<f<<": "<<f_vertices<<" is degenerate "<<std::endl;
+                return 12123;
+            }*/
+        }
+    }
+    return boundary_ok;
+}
 
 
 int ProgressiveEmbedder::shrink_and_expand(int debug_expander){
@@ -50,25 +89,33 @@ int ProgressiveEmbedder::shrink_and_expand(int debug_expander){
         //SphereMapper::center_mesh(codomain_mesh_);
         //SphereMapper::map_interior_to_centroid(codomain_mesh_);
 
-        for(auto f: codomain_mesh_.faces()){
-            if(codomain_mesh_.is_boundary(f)){
-                auto f_vertices = codomain_mesh_.get_halfface_vertices(codomain_mesh_.halfface_handle(f, 0));
-                auto tri = CGAL_Triangle3(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
-                        OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
-                        OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])));
 
-                if(CGAL::collinear(OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[0])),
-                                   OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[1])),
-                                   OVMvec3ToCGALPoint3(codomain_mesh_.vertex(f_vertices[2])))){
-                    std::cout<<" --> input boundary face "<<f<<": "<<f_vertices<<" is collinear "<<std::endl;
-                    return -1;
+        if(!is_codomain_boundary_valid()){
+            std::cout<<" WARNING - found some collinear boundary faces or some coplanar boundary tets"<<std::endl;
+            std::cout<<" WARNING - trying Chebyshev center as alternative for cluster initialization"<<std::endl;
+            std::cout<<" WARNING - Performances for this initialization have NOT been tested"<<std::endl;
 
+            ExpansionCone cone = codomain_mesh_;
+            VertexPosition cheb_centroid;
+            auto exp = cone.is_geo_expandable(cheb_centroid);
+            if(exp){
+                std::cout<<" --> Codomain boundary is NOT star-shaped"<<std::endl;
+                return -1;
+            }
+
+            centroid = vec2vec(cheb_centroid);
+            for(auto v: codomain_mesh_.vertices()){
+                if(!codomain_mesh_.is_boundary(v)){
+                    codomain_mesh_.set_vertex(v, centroid);
                 }
+            }
 
-                /*if(tri.is_degenerate()){
-                    std::cout<<" --> input boundary face "<<f<<": "<<f_vertices<<" is degenerate "<<std::endl;
-                    return 12123;
-                }*/
+            if(!is_codomain_boundary_valid()) {
+                std::cout<<" ERROR - codomain boundary is still not valid, even with Chebyshev center."<<std::endl;
+                std::cout<<" This can typically happen if your kernel is too small and the truncation to double failed"<<std::endl;
+                std::cout<<" My suggestion is to use boundary conditions for which the origin is inside the kernel."<<std::endl;
+                std::cout<<" If you have further questions, please reach out to yours truly (Valentin Nigolian)"<<std::endl;
+                return -1;
             }
         }
 
