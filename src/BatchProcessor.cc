@@ -58,6 +58,8 @@ int BatchProcessor::generate_boundary_conditions(MeshProcessingFunction function
     }
     input_mesh = mesh;
 
+    SphereMapper::center_mesh(mesh);
+
     auto result = function(mesh);
     result_mesh = mesh;
 

@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
         fm.writeFile("test.ovm", codomain_mesh);
 
         int result = ProgressiveEmbedder::shrinkAndExpand(domain_mesh,
-                                                 codomain_mesh,
+                                                          codomain_mesh,
                                                           filename,
                                                           directory+"/"+filename+"expansion_data.json",
                                                           option == 1);
