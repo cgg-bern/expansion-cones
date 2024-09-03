@@ -100,6 +100,8 @@ int ProgressiveEmbedder::shrink_and_expand(int debug_expander){
             auto exp = cone.is_geo_expandable(cheb_centroid);
             if(exp){
                 std::cout<<" --> Codomain boundary is NOT star-shaped"<<std::endl;
+                OpenVolumeMesh::IO::FileManager fm;
+                fm.writeFile("bad_boundary_conditions.ovm", codomain_mesh_);
                 return -1;
             }
 

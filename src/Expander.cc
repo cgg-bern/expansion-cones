@@ -191,6 +191,24 @@ namespace OpenVolumeMesh{
             domain_vertex_position_prop_[v] = vec2vec(input_mesh.vertex(v));
         }
 
+#if ENABLE_ALL_CHECKS
+
+        if(!expanding_cluster_) {
+
+            auto domain_bad_tets = ExactBadTetFinder::findBadTets(mesh_, domain_vertex_position_prop_);
+
+
+            if (!domain_bad_tets.first.empty()) {
+                std::cout << " ERROR - initial domain mesh contains degenerate tets" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            if (!domain_bad_tets.second.empty()) {
+                std::cout << " ERROR - initial domain mesh contains flipped tets " << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
 
         PRINT_IF_NOT_SILENT(" ===================================="<<std::endl);
         PRINT_IF_NOT_SILENT(" ===================================="<<std::endl);
@@ -378,6 +396,25 @@ namespace OpenVolumeMesh{
             PRINT_IF_NOT_SILENT(" ========================================================"<<std::endl);
             iteration_count_++;
             data_logger_.add_iteration_timing_point(iteration_duration_s * 1e6);
+
+#if ENABLE_ALL_CHECKS
+
+            if(!expanding_cluster_) {
+                auto domain_bad_tets = ExactBadTetFinder::findBadTets(mesh_, domain_vertex_position_prop_);
+
+                if (!domain_bad_tets.first.empty()) {
+                    std::cout << " ERROR - domain mesh contains degenerate tets after iteration " << iteration_count_
+                              << std::endl;
+                    return EXPANSION_ERROR;
+                }
+
+                if (!domain_bad_tets.second.empty()) {
+                    std::cout << " ERROR - domain mesh contains flipped tets after iteration " << iteration_count_
+                              << std::endl;
+                    return EXPANSION_ERROR;
+                }
+            }
+#endif
 
             //temp check
             /*if(!expanding_cluster_ && !all_unexpanded_vertices_are_at_the_center(VertexHandle(-1))){
@@ -874,7 +911,7 @@ namespace OpenVolumeMesh{
             if(!simple_cluster_expansion_result){
 
 #if ENABLE_ALL_CHECKS
-                if (ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
+                if (ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
                     std::cout << " ERROR - created flipped tets after simple cluster expansion" << std::endl;
                     return -1;
                 }
@@ -920,7 +957,7 @@ namespace OpenVolumeMesh{
                     //FIFTH STAGE: star-shapification with any valence
                     if(!simple_cluster_expansion_result){
 #if ENABLE_ALL_CHECKS
-                        if (ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
+                        if (ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
                             std::cout << " ERROR - created flipped tets after simple cluster expansion" << std::endl;
                             return -1;
                         }
@@ -969,7 +1006,7 @@ namespace OpenVolumeMesh{
                             }
 
 #if ENABLE_ALL_CHECKS
-                            if (ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)) {
+                            if (ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)) {
                                 std::cout << " ERROR - created flipped tets after star-shapifying cluster" << std::endl;
                                 return -1;
                             }
@@ -1167,7 +1204,7 @@ namespace OpenVolumeMesh{
 
 #if ENABLE_ALL_CHECKS
 
-                if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
+                if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
                     PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after smoothing"<<std::endl);
                     return EXPANSION_ERROR;
                 }
@@ -1523,12 +1560,12 @@ namespace OpenVolumeMesh{
 
 
 #if ENABLE_ALL_CHECKS
-        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
+        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after performing cluster interface expansion. Flipped tets:"<<std::endl);
-            auto bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
+            auto bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
             for(auto flipped_tet: bad_tets.second){
-                auto volume = OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, flipped_tet).volume();
-                PRINT_IF_NOT_SILENT(" - "<<flipped_tet<<" : "<<codomain_mesh_.get_cell_vertices(flipped_tet)<<", volume = "<<volume<<std::endl);
+                auto volume = OVMtetToCGALtet(mesh_, vertex_position_prop_, flipped_tet).volume();
+                PRINT_IF_NOT_SILENT(" - "<<flipped_tet<<" : "<<mesh_.get_cell_vertices(flipped_tet)<<", volume = "<<volume<<std::endl);
             }
             return -1;
         }
@@ -1736,9 +1773,9 @@ namespace OpenVolumeMesh{
         PRINT_IF_NOT_SILENT(" ======== CLUSTER EXPANSION RESULT: "<<cluster_expansion_result<<std::endl);
 
 #if ENABLE_ALL_CHECKS
-        auto degenerate_tets_count = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_).first.size();
+        auto degenerate_tets_count = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_).first.size();
         PRINT_IF_NOT_SILENT(" ======== updated degenerates count: "<<degenerate_tets_count<<std::endl);
-        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
+        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
             PRINT_IF_NOT_SILENT(" ERROR: Found flipped tets after expanding cluster"<<std::endl);
             return -1;
         }
@@ -3072,7 +3109,7 @@ namespace OpenVolumeMesh{
 
 #if ENABLE_ALL_CHECKS
 
-                if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(codomain_mesh_, vertex_position_prop_, best_expanse.center_vertex)){
+                if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(mesh_, vertex_position_prop_, best_expanse.center_vertex)){
                     PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after applying star-shapification"<<std::endl);
                     return EXPANSION_ERROR;
                 }
@@ -3149,15 +3186,15 @@ namespace OpenVolumeMesh{
 
 #if ENABLE_ALL_CHECKS
 
-        if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(codomain_mesh_, vertex_position_prop_, best_expanse.center_vertex)){
+        if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(mesh_, vertex_position_prop_, best_expanse.center_vertex)){
             PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after expanding vertex "<<best_expanse.center_vertex<<std::endl);
-            auto flipped_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_).second;
+            auto flipped_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_).second;
 
 
 
             for(auto tet: flipped_tets){
                 PRINT_IF_NOT_SILENT(" tet "<<tet<<" : "<<std::endl);
-                for(auto v: codomain_mesh_.get_cell_vertices(tet)){
+                for(auto v: mesh_.get_cell_vertices(tet)){
                     PRINT_IF_NOT_SILENT(" - "<<v<<" at "<<vec2vec(this->vertex(v))<<", expanded: "<<expanded_prop_[v]<<std::endl);
                 }
             }
@@ -4082,15 +4119,15 @@ namespace OpenVolumeMesh{
             std::vector<CellHandle> bad_cells;
             for(int i(initial_split_list_size); i<(int)split_list_.size(); i++){
                 auto mid_v = split_list_[i].cone_new_vertex;
-                if(!codomain_mesh_.is_deleted(mid_v)){
-                    for(auto vc_it = codomain_mesh_.vc_iter(mid_v); vc_it.valid(); vc_it++){
-                        auto c_vertices = codomain_mesh_.get_cell_vertices(*vc_it);
+                if(!mesh_.is_deleted(mid_v)){
+                    for(auto vc_it = mesh_.vc_iter(mid_v); vc_it.valid(); vc_it++){
+                        auto c_vertices = mesh_.get_cell_vertices(*vc_it);
                         auto unexp_count(0);
                         for(auto cv: c_vertices){
                             unexp_count += !expanded_prop_[cv];
                         }
                         if(unexp_count <= 1){
-                            if(OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, *vc_it).is_degenerate()){
+                            if(OVMtetToCGALtet(mesh_, vertex_position_prop_, *vc_it).is_degenerate()){
                                 bad_cells.push_back(*vc_it);
                             }
                         }
@@ -4105,8 +4142,8 @@ namespace OpenVolumeMesh{
 
                 if(bad_cells.size() < 50){
                     for(auto c: bad_cells){
-                        auto c_vertices = codomain_mesh_.get_cell_vertices(c);
-                        auto volume = OVMtetToCGALtet(codomain_mesh_, vertex_position_prop_, c).volume();
+                        auto c_vertices = mesh_.get_cell_vertices(c);
+                        auto volume = OVMtetToCGALtet(mesh_, vertex_position_prop_, c).volume();
                         PRINT_IF_NOT_SILENT(" -- "<<c<<": "<<c_vertices<<", volume = "<<volume<<std::endl);
                     }
                 }else{
@@ -4115,9 +4152,7 @@ namespace OpenVolumeMesh{
 
                 //PRINT_IF_NOT_SILENT(" --> remaining unexpanded vertices count = "<<left_to_expand_count()<<std::endl);
 
-               if(post_op_fix_degenerate_cells(bad_cells)){
-                    return -1;
-               }
+                return -1;
             }
         }
 #endif
@@ -4824,6 +4859,12 @@ namespace OpenVolumeMesh{
                                 break;
                             }
                         }
+                        if(OVMtetToCGALtet(mesh_, domain_vertex_position_prop_, *vc_it).orientation() == CGAL::NEGATIVE){
+                            valid_in_domain = false;
+                            //std::cout<<" --> collapse would create degenerate tets, skipping"<<std::endl);
+                            break;
+                        }
+
                     }
                     domain_vertex_position_prop_[from_v] = initial_domain_pos;
 
@@ -4954,7 +4995,7 @@ namespace OpenVolumeMesh{
 
                 if(surviving_vertex.is_valid()){
 #if ENABLE_ALL_CHECKS
-                    if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(codomain_mesh_, vertex_position_prop_, surviving_vertex)){
+                    if(ExactBadTetFinder::meshContainsFlippedTetsIn1Ring(mesh_, vertex_position_prop_, surviving_vertex)){
                         PRINT_IF_NOT_SILENT(" ERROR - mesh contains flipped tets after collapsing edge "<<from_v<<" -> "<<surviving_vertex<<std::endl);
                         return -1;
                     }
@@ -5535,23 +5576,23 @@ namespace OpenVolumeMesh{
         }
 
 #if ENABLE_ALL_CHECKS
-        if(ExactBadTetFinder::meshContainsFlippedTets(codomain_mesh_, vertex_position_prop_)){
-            std::cout<<" ERROR - mesh contains flipped tets after applying cluster star-shapification"<<std::endl);
-            auto bad_tets = ExactBadTetFinder::findBadTets(codomain_mesh_, vertex_position_prop_);
+        if(ExactBadTetFinder::meshContainsFlippedTets(mesh_, vertex_position_prop_)){
+            std::cout<<" ERROR - mesh contains flipped tets after applying cluster star-shapification"<<std::endl;
+            auto bad_tets = ExactBadTetFinder::findBadTets(mesh_, vertex_position_prop_);
             for(auto flipped_tet: bad_tets.second){
-                std::cout<<" - "<<flipped_tet<<": "<<std::endl);
-                for(auto v: codomain_mesh_.get_cell_vertices(flipped_tet)){
-                    std::cout<<"  -- "<<v<<" at "<<vec2vec(vertex_position_prop_[v])<<std::endl);
+                std::cout<<" - "<<flipped_tet<<": "<<std::endl;
+                for(auto v: mesh_.get_cell_vertices(flipped_tet)){
+                    std::cout<<"  -- "<<v<<" at "<<vec2vec(vertex_position_prop_[v])<<std::endl;
                 }
             }
 
-            std::cout<<" - base mid-vertices: "<<base_mid_vertices<<std::endl);
+            std::cout<<" - base mid-vertices: "<<base_mid_vertices<<std::endl;
             for(auto v: base_mid_vertices){
-                std::cout<<" -- cells around "<<v<<" : "<<std::endl);
+                std::cout<<" -- cells around "<<v<<" : "<<std::endl;
                 for(auto vc_it = ss_cone.vc_iter(v); vc_it.valid(); vc_it++){
-                    std::cout<<"  --- "<<(*vc_it)<<" (volume = "<<CGAL::to_double(OVMtetToCGALtet(ss_cone, *vc_it).volume())<<") : "<<std::endl);
+                    std::cout<<"  --- "<<(*vc_it)<<" (volume = "<<CGAL::to_double(OVMtetToCGALtet(ss_cone, *vc_it).volume())<<") : "<<std::endl;
                     for(auto cv: ss_cone.get_cell_vertices(*vc_it)){
-                        std::cout<<"  ---- "<<cv<<" -> "<<cone_to_mesh_prop[cv]<<std::endl);
+                        std::cout<<"  ---- "<<cv<<" -> "<<cone_to_mesh_prop[cv]<<std::endl;
                     }
                 }
             }
